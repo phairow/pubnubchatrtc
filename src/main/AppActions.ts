@@ -28,6 +28,13 @@ import {
 import { MessageReceivedAction } from "pubnub-redux/dist/features/message/MessageActions";
 import { MessageEnvelope } from "features/messages/messageModel";
 import { userSelectedAction } from "../features/userDetail/userDetailModel";
+import {
+  userCalledAction,
+  userCallingAction,
+  callRejectedAction,
+  callConnectedAction,
+  callCompletedAction
+} from "../features/rtc/RtcModel";
 
 /**
  * AppActions is the union of all basic actions in this application.
@@ -59,4 +66,9 @@ export type AppActions =
   | RemoveTypingIndicatorAllAction
   | userDetailViewDisplayedAction
   | userDetailViewHiddenAction
-  | userSelectedAction;
+  | userSelectedAction
+  | userCalledAction
+  | userCallingAction
+  | callRejectedAction
+  | callConnectedAction
+  | callCompletedAction;

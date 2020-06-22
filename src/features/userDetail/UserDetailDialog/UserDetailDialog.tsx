@@ -25,6 +25,7 @@ import { getUsersById } from "../../users/userModel";
 import { PresenceIndicatorIcon } from "../../../foundations/components/icons/PresenceIndicatorIcon";
 import { getPresenceByConversationId } from "features/memberPresence/memberPresenceModel";
 import { getCurrentConversationId } from "features/currentConversation/currentConversationModel";
+import { userCalled } from "../../rtc/RtcModel";
 
 const UserDetailDialog = () => {
   const dispatch = useDispatch();
@@ -45,6 +46,7 @@ const UserDetailDialog = () => {
     }).length > 0;
 
   const initiateCall = () => {
+    dispatch(userCalled(user.id));
     dispatch(rtcViewDisplayed());
     dispatch(userDetailViewHidden());
   };

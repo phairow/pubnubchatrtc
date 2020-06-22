@@ -13,6 +13,7 @@ import { ConversationMembersStateReducer } from "features/conversationMembers/co
 import { NetworkStatusReducer } from "features/currentUser/networkStatusModel";
 import { MemberPresenceReducer } from "features/memberPresence/memberPresenceModel";
 import { UserDetailStateReducer } from "features/userDetail/userDetailModel";
+import { RtcStateReducer } from "features/rtc/RtcModel";
 
 /**
  * Combine all of the reducers in this application
@@ -30,7 +31,8 @@ const rootReducer = combineReducers({
   typingIndicators: TypingIndicatorStateReducer,
   authentication: AuthenticationStateReducer,
   currentConversation: currentConversationStateReducer,
-  userDetail: UserDetailStateReducer
+  userDetail: UserDetailStateReducer,
+  rtc: RtcStateReducer
 });
 
 export default rootReducer;

@@ -4,6 +4,7 @@ import {
   createMessageReducer,
   Message as PubNubMessageEnvelope
 } from "pubnub-redux";
+import { CallState } from "features/rtc/RtcModel";
 
 /**
  * Define the types of messages that this application is designed to work with.
@@ -11,7 +12,8 @@ import {
  * This application only defines "text" messages, but you can add more here.
  */
 export enum MessageType {
-  Text = "text"
+  Text = "text",
+  Rtc = "rtc"
 }
 
 /**
@@ -44,6 +46,18 @@ export interface TextMessage extends BaseMessage {
   text: string;
 }
 
+export interface RtcMessage extends BaseMessage {
+  /**
+   * type must be "rtc"
+   */
+  type: MessageType.Rtc;
+
+  /**
+   * The message content with a UTF-8 unicode encoding
+   */
+  callState: CallState;
+}
+
 /**
  * This is a union of all of the message types that the application works with.
  *
@@ -65,7 +79,7 @@ export interface TextMessage extends BaseMessage {
  * Using your IDE to find references to AppMessage will help find those areas you
  * need to modify.
  */
-export type AppMessage = TextMessage;
+export type AppMessage = TextMessage | RtcMessage;
 
 /**
  * Customize the PubNub message envelope declaration to include our custom message types
