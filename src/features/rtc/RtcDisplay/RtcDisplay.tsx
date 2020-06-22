@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { CrossIcon } from "foundations/components/icons/CrossIcon";
 import {
@@ -23,6 +23,7 @@ import { MessageType, getMessagesById } from "../../messages/messageModel";
 import { getUsersById } from "../../users/userModel";
 import { createSelector } from "reselect";
 import { getLoggedInUserId } from "../../authentication/authenticationModel";
+import { callConnected } from "../RtcModel";
 
 let dialingTimeoutSeconds = 3;
 
@@ -65,11 +66,13 @@ export const getCallMessages = createSelector(
 const RtcDisplay = () => {
   const [video, setVideo] = useState(false);
   const [audio, setAudio] = useState(false);
+  const [dialed, setDialed] = useState(false);
   const dispatch = useDispatch();
   const peerUserId = useSelector(getPeerUserId);
   const callState = useSelector(getCallState);
   const callMessages = useSelector(getCallMessages);
   const views = useSelector(getViewStates);
+  const myId = useSelector(getLoggedInUserId);
   const theme = useContext(ThemeContext);
 
   const disableVideo = () => {
@@ -123,6 +126,21 @@ const RtcDisplay = () => {
     }
   };
 
+  const answerCall = () => {
+    dispatch(
+      sendPubnubMessage({
+        channel: peerUserId,
+        message: {
+          type: MessageType.Rtc,
+          callState: CallState.OUTGOING_CALL_CONNECTED,
+          senderId: myId
+        }
+      })
+    );
+
+    dispatch(callConnected(CallState.INCOMMING_CALL_CONNECTED));
+  };
+
   const toggleVideo = () => {
     updateMedia({ audio, video: !video });
     setVideo(!video);
@@ -133,43 +151,90 @@ const RtcDisplay = () => {
     setAudio(!audio);
   };
 
-  if (callState === CallState.DIALING) {
-    let myPeerConnection = new RTCPeerConnection({
-      iceServers
-    });
+  useEffect(() => {
+    if (!dialed && callState === CallState.DIALING) {
+      let myPeerConnection = new RTCPeerConnection({
+        iceServers
+      });
 
-    myPeerConnection
-      .createOffer()
-      .then(function(offer) {
-        console.log("offercreated", offer);
-        return myPeerConnection.setLocalDescription(offer);
-      })
-      .then(function() {
-        console.log(myPeerConnection.localDescription);
-      })
-      .catch(e => console.log("error in offer", e));
+      myPeerConnection
+        .createOffer()
+        .then(function(offer) {
+          console.log("offercreated", offer);
+          return myPeerConnection.setLocalDescription(offer);
+        })
+        .then(function() {
+          console.log(myPeerConnection.localDescription);
+        })
+        .catch(e => console.log("error in offer", e));
 
+      dispatch(
+        sendPubnubMessage({
+          channel: peerUserId,
+          message: {
+            type: MessageType.Rtc,
+            callState: CallState.DIALING,
+            senderId: myId
+          }
+        })
+      );
+      setDialed(true);
+    }
+
+    if (callMessages && callMessages[callMessages.length - 1]) {
+      const message = callMessages[callMessages.length - 1];
+
+      if (
+        callState !== CallState.INCOMMING_CALL_CONNECTED &&
+        callState !== CallState.OUTGOING_CALL_CONNECTED
+      ) {
+        if (
+          message.type === MessageType.Rtc &&
+          message.callState === CallState.DIALING
+        ) {
+          dispatch(userCalling(message.sender.id));
+          dispatch(rtcViewDisplayed());
+        } else if (
+          message.type === MessageType.Rtc &&
+          message.callState === CallState.OUTGOING_CALL_CONNECTED
+        ) {
+          setDialed(false); // we are done dialing
+          dispatch(callConnected(CallState.OUTGOING_CALL_CONNECTED));
+        }
+      }
+
+      if (
+        message.type === MessageType.Rtc &&
+        message.callState === CallState.OUTGOING_CALL_COMPLETED
+      ) {
+        setDialed(false); // we are done dialing
+        dispatch(callConnected(CallState.OUTGOING_CALL_COMPLETED));
+      }
+    }
+  }, [callMessages, callState, dialed, dispatch, myId, peerUserId]);
+
+  const closeMedia = () => {
+    disableMedia();
+    dispatch(rtcViewHidden());
+    setDialed(false);
+  };
+
+  const endCall = () => {
     dispatch(
       sendPubnubMessage({
         channel: peerUserId,
-        message: { type: MessageType.Rtc, callState: CallState.DIALING }
+        message: {
+          type: MessageType.Rtc,
+          callState: CallState.OUTGOING_CALL_COMPLETED,
+          senderId: myId
+        }
       })
     );
-  }
 
-  if (callMessages && callMessages[callMessages.length - 1]) {
-    const message = callMessages[callMessages.length - 1];
+    dispatch(callConnected(CallState.OUTGOING_CALL_COMPLETED));
 
-    console.log("b", message);
-    if (
-      message.type === MessageType.Rtc &&
-      message.callState === CallState.DIALING
-    ) {
-      console.log("c");
-      dispatch(userCalling(message.sender.id));
-      dispatch(rtcViewDisplayed());
-    }
-  }
+    closeMedia();
+  };
 
   return (
     <Wrapper displayed={views.Rtc}>
@@ -177,8 +242,7 @@ const RtcDisplay = () => {
         <Title>Call</Title>
         <CloseButton
           onClick={() => {
-            disableMedia();
-            dispatch(rtcViewHidden());
+            closeMedia();
           }}
         >
           <CrossIcon color={theme.colors.normalText} title="close" />
@@ -187,7 +251,22 @@ const RtcDisplay = () => {
       <Body>
         <button onClick={toggleVideo}>Video ({video ? "on" : "off"})</button>
         <button onClick={toggleAudio}>Audio ({audio ? "on" : "off"})</button>
+        {(callState === CallState.OUTGOING_CALL_CONNECTED ||
+          callState === CallState.INCOMMING_CALL_CONNECTED) && (
+          <button onClick={endCall}>Connected (click to end call)</button>
+        )}
         <VideoWrapper>
+          {callState === CallState.DIALING && <div>Dialing ...</div>}
+          {callState === CallState.RECEIVING_CALL && (
+            <div>
+              Receiving Call ...
+              <button onClick={answerCall}>Answer</button>
+            </div>
+          )}
+          {(callState === CallState.OUTGOING_CALL_COMPLETED ||
+            callState === CallState.INCOMMING_CALL_COMPLETED) && (
+            <div>Call Completed</div>
+          )}
           <video id="myvideo" autoPlay={true} playsInline={true}></video>
           <audio id="myaudio" autoPlay={true}></audio>
         </VideoWrapper>
