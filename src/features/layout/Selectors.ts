@@ -25,7 +25,9 @@ export const getViewStates = createSelector(
       Menu: views.includes(View.Menu),
       ConversationMembers: views.includes(View.ConversationMembers),
       JoinConversation: views.includes(View.JoinConversation),
-      CurrentConversation: views.includes(View.CurrentConversation)
+      CurrentConversation: views.includes(View.CurrentConversation),
+      UserDetail: views.includes(View.UserDetail),
+      Rtc: views.includes(View.Rtc)
     };
   }
 );

@@ -52,12 +52,17 @@ export const Avatar = styled.div`
   height: ${({ theme }) => theme.sizes[1]};
 `;
 
-export const SenderName = styled.span`
+export const SenderName = styled.span<{ showDetails: boolean }>`
   font-size: ${({ theme }) => theme.fontSizes.medium};
   font-family: ${({ theme }) => theme.fonts.app};
   font-weight: ${({ theme }) => theme.fontWeights.medium};
   text-transform: capitalize;
   color: ${({ theme }) => theme.colors.importantText};
+  cursor: ${({ theme, showDetails }) => (showDetails ? "pointer" : "default")};
+  &:hover {
+    text-decoration: ${({ theme, showDetails }) =>
+      showDetails ? "underline" : "default"};
+  }
 `;
 
 export const TimeSent = styled.span`

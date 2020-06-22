@@ -15,7 +15,9 @@ import {
   menuViewHiddenAction,
   currentConversationViewHiddenAction,
   conversationMembersViewHiddenAction,
-  joinConversationViewHiddenAction
+  joinConversationViewHiddenAction,
+  userDetailViewHiddenAction,
+  userDetailViewDisplayedAction
 } from "features/layout/LayoutActions";
 import { SignalReceivedAction } from "pubnub-redux/dist/features/signal/SignalActions";
 import {
@@ -25,6 +27,7 @@ import {
 } from "features/typingIndicator/typingIndicatorModel";
 import { MessageReceivedAction } from "pubnub-redux/dist/features/message/MessageActions";
 import { MessageEnvelope } from "features/messages/messageModel";
+import { userSelectedAction } from "../features/userDetail/userDetailModel";
 
 /**
  * AppActions is the union of all basic actions in this application.
@@ -53,4 +56,7 @@ export type AppActions =
   | SignalReceivedAction<TypingIndicatorEnvelope>
   | MessageReceivedAction<MessageEnvelope>
   | RemoveTypingIndicatorAction
-  | RemoveTypingIndicatorAllAction;
+  | RemoveTypingIndicatorAllAction
+  | userDetailViewDisplayedAction
+  | userDetailViewHiddenAction
+  | userSelectedAction;

@@ -12,6 +12,7 @@ import { ConversationDraftStateReducer } from "features/joinedConversations/Draf
 import { ConversationMembersStateReducer } from "features/conversationMembers/conversationMemberModel";
 import { NetworkStatusReducer } from "features/currentUser/networkStatusModel";
 import { MemberPresenceReducer } from "features/memberPresence/memberPresenceModel";
+import { UserDetailStateReducer } from "features/userDetail/userDetailModel";
 
 /**
  * Combine all of the reducers in this application
@@ -28,7 +29,8 @@ const rootReducer = combineReducers({
   messages: MessageStateReducer,
   typingIndicators: TypingIndicatorStateReducer,
   authentication: AuthenticationStateReducer,
-  currentConversation: currentConversationStateReducer
+  currentConversation: currentConversationStateReducer,
+  userDetail: UserDetailStateReducer
 });
 
 export default rootReducer;

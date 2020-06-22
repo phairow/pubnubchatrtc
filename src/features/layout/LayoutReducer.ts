@@ -5,7 +5,9 @@ export enum View {
   Menu,
   CurrentConversation,
   ConversationMembers,
-  JoinConversation
+  JoinConversation,
+  UserDetail,
+  Rtc
 }
 
 interface LayoutState {
@@ -45,6 +47,14 @@ const LayoutStateReducer = (
       return viewDisplayed(state, View.JoinConversation);
     case LayoutActionType.JOIN_CONVERSATION_VIEW_HIDDEN:
       return viewHidden(state, View.JoinConversation);
+    case LayoutActionType.USER_DETAIL_VIEW_DISPLAYED:
+      return viewDisplayed(state, View.UserDetail);
+    case LayoutActionType.USER_DETAIL_VIEW_HIDDEN:
+      return viewHidden(state, View.UserDetail);
+    case LayoutActionType.RTC_VIEW_DISPLAYED:
+      return viewDisplayed(state, View.Rtc);
+    case LayoutActionType.RTC_VIEW_HIDDEN:
+      return viewHidden(state, View.Rtc);
   }
   return state;
 };

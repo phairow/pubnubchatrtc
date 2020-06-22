@@ -1,6 +1,6 @@
 {
-  "name": "team-chat",
-  "version": "0.8.0",
+  "name": "pubnubchatrtc",
+  "version": "0.1.0",
   "description": "Team Chat - A Reference Application for PubNub with Typescript, React and Redux",
   "license": "MIT",
   "private": true,
@@ -15,6 +15,7 @@
     "emoji-mart": "^2.11.1",
     "framer-motion": "^1.10.2",
     "invariant": "^2.2.4",
+    "node-stun": "^0.1.2",
     "polished": "^3.5.1",
     "pubnub": "^4.27.6",
     "pubnub-react": "^2.0.0",

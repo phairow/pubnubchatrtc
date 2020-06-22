@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import convertTimestampToTime from "foundations/utilities/convertTimestampToTime";
 import {
   Wrapper,
@@ -10,6 +11,9 @@ import {
 } from "./MessageListItem.style";
 import { MessageDisplay } from "features/messages/MessageDisplay";
 import { AppMessage } from "features/messages/messageModel";
+import { getUsersById } from "features/users/userModel";
+import { userDetailViewDisplayed } from "../../layout/LayoutActions";
+import { selectUser } from "../../userDetail/userDetailModel";
 
 // TODO: Explain message fragment
 export interface MessageFragment {
@@ -30,14 +34,28 @@ interface MessageProps {
  * Display a message as it appears in a list
  */
 const MessageListItem = ({ messageFragment, avatar }: MessageProps) => {
+  const dispatch = useDispatch();
   let sender = messageFragment.sender;
+  const usersById = useSelector(getUsersById);
+  let hasSender = false;
 
+  const openOverlay = () => {
+    dispatch(selectUser(messageFragment.sender.id));
+    dispatch(userDetailViewDisplayed());
+  };
+
+  if (messageFragment.sender && messageFragment.sender.id) {
+    const user = usersById[messageFragment.sender.id];
+    hasSender = user !== undefined;
+  }
   return (
     <Wrapper>
       <Avatar>{avatar}</Avatar>
       <Body>
         <Header>
-          <SenderName>{sender.name}</SenderName>
+          <SenderName showDetails={hasSender} onClick={openOverlay}>
+            {sender.name}
+          </SenderName>
           <TimeSent>
             {convertTimestampToTime(messageFragment.timetoken)}
           </TimeSent>
