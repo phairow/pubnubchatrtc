@@ -207,7 +207,6 @@ const RtcDisplay = () => {
         message.type === MessageType.Rtc &&
         message.callState === CallState.OUTGOING_CALL_COMPLETED
       ) {
-        setDialed(false); // we are done dialing
         dispatch(callConnected(CallState.OUTGOING_CALL_COMPLETED));
       }
     }
@@ -231,7 +230,13 @@ const RtcDisplay = () => {
       })
     );
 
-    dispatch(callConnected(CallState.OUTGOING_CALL_COMPLETED));
+    if (callState === CallState.OUTGOING_CALL_CONNECTED) {
+      dispatch(callConnected(CallState.OUTGOING_CALL_COMPLETED));
+    }
+
+    if (callState === CallState.INCOMMING_CALL_CONNECTED) {
+      dispatch(callConnected(CallState.INCOMMING_CALL_CONNECTED));
+    }
 
     closeMedia();
   };
