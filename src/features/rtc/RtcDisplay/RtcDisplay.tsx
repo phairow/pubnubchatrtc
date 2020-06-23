@@ -137,18 +137,6 @@ const RtcDisplay = () => {
           answer: peerConnection.remoteDescription
         }
       });
-
-      // add track
-      let stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video: true
-      });
-
-      console.log("adding tracks");
-      stream.getTracks().forEach(track => {
-        console.log("track added");
-        peerConnection.addTrack(track, stream);
-      });
     }
 
     if (message.message.answer) {
@@ -157,18 +145,6 @@ const RtcDisplay = () => {
       peerConnection.setRemoteDescription(
         new RTCSessionDescription(message.message.answer)
       );
-
-      // add track
-      let stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video: true
-      });
-
-      console.log("adding tracks");
-      stream.getTracks().forEach(track => {
-        console.log("track added");
-        peerConnection.addTrack(track, stream);
-      });
     }
   };
 
@@ -193,6 +169,20 @@ const RtcDisplay = () => {
     }
   };
 
+  peerConnection.onconnectionstatechange = async e => {
+    // add track
+    let stream = await navigator.mediaDevices.getUserMedia({
+      audio,
+      video: true
+    });
+
+    console.log("adding tracks");
+    stream.getTracks().forEach(track => {
+      console.log("track added");
+      peerConnection.addTrack(track, stream);
+    });
+  };
+
   peerConnection.onnegotiationneeded = async () => {
     console.log("on negotiation needed");
     // const offer = await peerConnection.createOffer({
@@ -209,6 +199,10 @@ const RtcDisplay = () => {
     //     offer: peerConnection.localDescription
     //   }
     // });
+  };
+
+  (peerConnection as any).onaddstream = function(event: any) {
+    (document.querySelector("#remotevideo") as any).srcObject = event.stream;
   };
 
   const disableVideo = () => {
