@@ -17,8 +17,8 @@ html,
 #root {
   height: 100%;
 }
-@media screen and (max-width: 767px) {
-  input, select, textarea {
+@media screen and (max-width: 1200px) {
+  input, select, textarea, input:focus, select:focus, textarea:focus {
     font-size: 16px;
   }
 }
