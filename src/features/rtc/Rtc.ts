@@ -1,4 +1,20 @@
-export const createPeerConnection = () => {};
+interface RtcState {
+  peerConnection?: RTCPeerConnection;
+}
+
+let state: RtcState = {
+  peerConnection: undefined
+};
+
+export const createPeerConnection = (
+  iceConfig: RTCIceServer[]
+): RTCPeerConnection => {
+  state.peerConnection = new RTCPeerConnection({
+    iceServers: iceConfig
+  });
+
+  return state.peerConnection;
+};
 
 export const getUserMedia = () => {};
 

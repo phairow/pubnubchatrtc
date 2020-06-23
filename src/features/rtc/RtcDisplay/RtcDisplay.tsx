@@ -27,9 +27,15 @@ import { createSelector } from "reselect";
 import { getLoggedInUserId } from "../../authentication/authenticationModel";
 import { callConnected } from "../RtcModel";
 import RtcSettings from "config/rtcSettings.json";
+import { createPeerConnection } from "../Rtc";
+import { usePubNub } from "pubnub-react";
+import Pubnub from "pubnub";
 
 const ICE_CONFIG = RtcSettings.rtcIceConfig;
 const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
+
+// TODO: figure out how to handle peer connections in a clean way
+const peerConnection = createPeerConnection(ICE_CONFIG);
 
 export const getLastCallMessage = createSelector(
   [getMessagesById, getLoggedInUserId, getUsersById],
@@ -62,10 +68,10 @@ export const getLastCallMessage = createSelector(
   }
 );
 
+let pubnubIceListener: Pubnub.ListenerParameters = {};
+
 const RtcDisplay = () => {
-  // const [peerConnection, setPeerConnection] = useState(new RTCPeerConnection({
-  //   iceServers: ICE_CONFIG
-  // }));
+  const pubnub = usePubNub();
   const [video, setVideo] = useState(false);
   const [audio, setAudio] = useState(false);
   const [dialed, setDialed] = useState(false);
@@ -78,6 +84,65 @@ const RtcDisplay = () => {
   const views = useSelector(getViewStates);
   const myId = useSelector(getLoggedInUserId);
   const theme = useContext(ThemeContext);
+
+  pubnub.removeListener(pubnubIceListener);
+  pubnub.addListener(pubnubIceListener);
+
+  pubnubIceListener.message = async message => {
+    if (message.message.candidate) {
+      // we got an ice candidate from a peer
+      console.log("candidate received from peer", message.message.candidate);
+    }
+
+    if (message.message.offer) {
+      // we got an ice offer from a peer
+      console.log("offer received from peer", message.message.offer);
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(message.message.offer)
+      );
+      const answer = await peerConnection.createAnswer();
+
+      await peerConnection.setLocalDescription(answer);
+
+      // send answer
+      console.log("answer sent to peer", peerConnection.localDescription);
+      pubnub.publish({
+        channel: currentCall.peerUserId,
+        message: {
+          answer: peerConnection.localDescription
+        }
+      });
+    }
+
+    if (message.message.answer) {
+      // we got an ice answer from a peer
+      console.log("answer received from peer", message.message.answer);
+      peerConnection.setRemoteDescription(
+        new RTCSessionDescription(message.message.answer)
+      );
+
+      // add track
+      let stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video: !video
+      });
+
+      stream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, stream);
+      });
+    }
+  };
+
+  // send ice candidates to peer
+  peerConnection.onicecandidate = function(event) {
+    console.log("candidate sent to peer");
+    pubnub.publish({
+      channel: currentCall.peerUserId,
+      message: {
+        candidate: event.candidate
+      }
+    });
+  };
 
   const disableVideo = () => {
     (document.querySelector("#myvideo") as any).srcObject &&
@@ -191,6 +256,19 @@ const RtcDisplay = () => {
       console.log("outgoing call accepted");
       setPeerAnswered(true);
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
+
+      const offer = await peerConnection.createOffer();
+
+      console.log("attempting local offer", offer);
+      await peerConnection.setLocalDescription(offer);
+
+      console.log("sending local offer to peer");
+      pubnub.publish({
+        channel: currentCall.peerUserId,
+        message: {
+          offer: peerConnection.localDescription
+        }
+      });
     };
 
     const callEnded = async (callState: RtcCallState, endTime: number) => {
@@ -292,8 +370,8 @@ const RtcDisplay = () => {
     return (
       !isDialing() &&
       currentCall.callState !== RtcCallState.OUTGOING_CALL_CONNECTED &&
-        currentCall.callState !== RtcCallState.INCOMING_CALL_CONNECTED &&
-        lastIncommingCall.callState === RtcCallState.RECEIVING_CALL
+      currentCall.callState !== RtcCallState.INCOMING_CALL_CONNECTED &&
+      lastIncommingCall.callState === RtcCallState.RECEIVING_CALL
     );
   };
 
