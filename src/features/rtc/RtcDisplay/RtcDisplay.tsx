@@ -183,14 +183,14 @@ const RtcDisplay = () => {
     let stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
 
     disableAudio();
-    (document.querySelector("#myvideo") as any).srcObject = stream;
+    // (document.querySelector("#myvideo") as any).srcObject = stream;
   };
 
   const enableAudio = async (mediaConstraints: MediaStreamConstraints) => {
     let stream = navigator.mediaDevices.getUserMedia(mediaConstraints);
 
     disableVideo();
-    (document.querySelector("#myaudio") as any).srcObject = stream;
+    // (document.querySelector("#myaudio") as any).srcObject = stream;
   };
 
   const updateMedia = (mediaConstraints: MediaStreamConstraints) => {
