@@ -197,6 +197,7 @@ const RtcDisplay = () => {
       console.log("peer ended");
       setDialed(false);
       dispatch(callCompleted(callState, endTime));
+      closeMedia();
     };
 
     // console.log('---');
@@ -289,9 +290,10 @@ const RtcDisplay = () => {
 
   const isIncommingCall = () => {
     return (
+      !isDialing() &&
       currentCall.callState !== RtcCallState.OUTGOING_CALL_CONNECTED &&
-      currentCall.callState !== RtcCallState.INCOMING_CALL_CONNECTED &&
-      lastIncommingCall.callState === RtcCallState.RECEIVING_CALL
+        currentCall.callState !== RtcCallState.INCOMING_CALL_CONNECTED &&
+        lastIncommingCall.callState === RtcCallState.RECEIVING_CALL
     );
   };
 
