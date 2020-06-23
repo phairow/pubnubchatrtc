@@ -35,39 +35,22 @@ const ICE_CONFIG = RtcSettings.rtcIceConfig;
 const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 
 // TODO: figure out how to handle peer connections in a clean way
-const localPeerConnection = createPeerConnection(ICE_CONFIG);
-const remotePeerConnection = createPeerConnection(ICE_CONFIG);
+const peerConnection = createPeerConnection(ICE_CONFIG);
 
-localPeerConnection.onicegatheringstatechange = event => {
+peerConnection.onicegatheringstatechange = event => {
   console.log("onicegatheringstatechange", event);
 };
-localPeerConnection.oniceconnectionstatechange = event => {
+peerConnection.oniceconnectionstatechange = event => {
   console.log("oniceconnectionstatechange", event);
 };
-localPeerConnection.onicecandidateerror = event => {
+peerConnection.onicecandidateerror = event => {
   console.log("onicecandidateerror", event);
 };
-localPeerConnection.onconnectionstatechange = event => {
+peerConnection.onconnectionstatechange = event => {
   console.log("onconnectionstatechange", event);
 };
-localPeerConnection.onsignalingstatechange = event => {
+peerConnection.onsignalingstatechange = event => {
   console.log("onsignalingstatechange", event);
-};
-
-remotePeerConnection.onicegatheringstatechange = event => {
-  console.log("remote onicegatheringstatechange", event);
-};
-remotePeerConnection.oniceconnectionstatechange = event => {
-  console.log("remote oniceconnectionstatechange", event);
-};
-remotePeerConnection.onicecandidateerror = event => {
-  console.log("remote onicecandidateerror", event);
-};
-remotePeerConnection.onconnectionstatechange = event => {
-  console.log("remote onconnectionstatechange", event);
-};
-remotePeerConnection.onsignalingstatechange = event => {
-  console.log("remote onsignalingstatechange", event);
 };
 
 export const getLastCallMessage = createSelector(
@@ -129,7 +112,7 @@ const RtcDisplay = () => {
         typeof message.message.candidate,
         message.message.candidate
       );
-      remotePeerConnection.addIceCandidate(
+      peerConnection.addIceCandidate(
         new RTCIceCandidate(message.message.candidate)
       );
     }
@@ -137,24 +120,21 @@ const RtcDisplay = () => {
     if (message.message.offer) {
       // we got an ice offer from a peer
       console.log("offer received from peer", message.message.offer);
-      await remotePeerConnection.setRemoteDescription(
+      await peerConnection.setRemoteDescription(
         new RTCSessionDescription(message.message.offer)
       );
-      const answer = await remotePeerConnection.createAnswer({
+      const answer = await peerConnection.createAnswer({
         offerToReceiveVideo: true
       });
 
-      await remotePeerConnection.setLocalDescription(answer);
+      await peerConnection.setLocalDescription(answer);
 
       // send answer
-      console.log(
-        "answer sent to peer",
-        remotePeerConnection.remoteDescription
-      );
+      console.log("answer sent to peer", peerConnection.remoteDescription);
       pubnub.publish({
         channel: currentCall.peerUserId,
         message: {
-          answer: remotePeerConnection.remoteDescription
+          answer: peerConnection.remoteDescription
         }
       });
 
@@ -167,14 +147,14 @@ const RtcDisplay = () => {
       console.log("adding tracks");
       stream.getTracks().forEach(track => {
         console.log("track added");
-        remotePeerConnection.addTrack(track, stream);
+        peerConnection.addTrack(track, stream);
       });
     }
 
     if (message.message.answer) {
       // we got an ice answer from a peer
       console.log("answer received from peer", message.message.answer);
-      remotePeerConnection.setRemoteDescription(
+      peerConnection.setRemoteDescription(
         new RTCSessionDescription(message.message.answer)
       );
 
@@ -187,13 +167,13 @@ const RtcDisplay = () => {
       console.log("adding tracks");
       stream.getTracks().forEach(track => {
         console.log("track added");
-        remotePeerConnection.addTrack(track, stream);
+        peerConnection.addTrack(track, stream);
       });
     }
   };
 
   // send ice candidates to peer
-  localPeerConnection.onicecandidate = function(event) {
+  peerConnection.onicecandidate = function(event) {
     console.log("candidate sent to peer");
     pubnub.publish({
       channel: currentCall.peerUserId,
@@ -203,18 +183,7 @@ const RtcDisplay = () => {
     });
   };
 
-  // send ice candidates to peer
-  remotePeerConnection.onicecandidate = function(event) {
-    console.log("remote candidate sent to peer");
-    pubnub.publish({
-      channel: currentCall.peerUserId,
-      message: {
-        candidate: event.candidate?.toJSON()
-      }
-    });
-  };
-
-  remotePeerConnection.ontrack = e => {
+  peerConnection.ontrack = e => {
     console.log("on track received");
     if (
       (document.querySelector("#remotevideo") as any).srcObject! ===
@@ -224,38 +193,20 @@ const RtcDisplay = () => {
     }
   };
 
-  localPeerConnection.onnegotiationneeded = async () => {
+  peerConnection.onnegotiationneeded = async () => {
     console.log("on negotiation needed");
-    const offer = await localPeerConnection.createOffer({
-      offerToReceiveVideo: true
-    });
+    // const offer = await peerConnection.createOffer({
+    //   offerToReceiveVideo: true
+    // });
 
-    console.log("attempting local offer", offer);
-    await remotePeerConnection.setLocalDescription(offer);
+    // console.log("attempting local offer", offer);
+    // await peerConnection.setLocalDescription(offer);
 
-    console.log("sending local offer to peer");
-    pubnub.publish({
-      channel: currentCall.peerUserId,
-      message: {
-        offer: remotePeerConnection.localDescription
-      }
-    });
-  };
-
-  remotePeerConnection.onnegotiationneeded = async () => {
-    console.log("remote on negotiation needed");
-    const offer = await remotePeerConnection.createOffer({
-      offerToReceiveVideo: true
-    });
-
-    console.log("remote attempting local offer", offer);
-    await remotePeerConnection.setLocalDescription(offer);
-
-    // console.log("remote sending local offer to peer");
+    // console.log("sending local offer to peer");
     // pubnub.publish({
     //   channel: currentCall.peerUserId,
     //   message: {
-    //     answer: remotePeerConnection.remoteDescription
+    //     offer: peerConnection.localDescription
     //   }
     // });
   };
@@ -372,18 +323,18 @@ const RtcDisplay = () => {
       setPeerAnswered(true);
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
 
-      const offer = await localPeerConnection.createOffer({
+      const offer = await peerConnection.createOffer({
         offerToReceiveVideo: true
       });
 
       console.log("attempting local offer", offer);
-      await localPeerConnection.setLocalDescription(offer);
+      await peerConnection.setLocalDescription(offer);
 
       console.log("sending local offer to peer");
       pubnub.publish({
         channel: currentCall.peerUserId,
         message: {
-          offer: localPeerConnection.localDescription
+          offer: peerConnection.localDescription
         }
       });
     };
