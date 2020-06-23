@@ -17,6 +17,11 @@ html,
 #root {
   height: 100%;
 }
+@media screen and (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
 `;
 
 export default GlobalStyles;

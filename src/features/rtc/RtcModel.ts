@@ -1,18 +1,7 @@
 import { AppState } from "main/storeTypes";
 import { createSelector } from "reselect";
 import { AppActions } from "../../main/AppActions";
-
-export enum CallState {
-  IDLE = "IDLE",
-  DIALING = "DIALING",
-  RECEIVING_CALL = "RECEIVING_CALL",
-  OUTGOING_CALL_REJECTED = "OUTGOING_CALL_REJECTED",
-  INCOMMING_CALL_REJECTED = "INCOMMING_CALL_REJECTED",
-  OUTGOING_CALL_CONNECTED = "OUTGOING_CALL_CONNECTED",
-  INCOMMING_CALL_CONNECTED = "INCOMMING_CALL_CONNECTED",
-  OUTGOING_CALL_COMPLETED = "OUTGOING_CALL_COMPLETED",
-  INCOMMING_CALL_COMPLETED = "INCOMMING_CALL_COMPLETED"
-}
+import { RtcCallState } from "./RtcCallState";
 
 export const USER_CALLED = "USER_CALLED";
 export const USER_CALLING = "USER_CALLING";
@@ -34,21 +23,21 @@ export const userCalling = (userId: string): userCallingAction => ({
   }
 });
 
-export const callRejected = (status: CallState): callRejectedAction => ({
+export const callRejected = (status: RtcCallState): callRejectedAction => ({
   type: CALL_REJECTED,
   payload: {
     status
   }
 });
 
-export const callConnected = (status: CallState): callConnectedAction => ({
+export const callConnected = (status: RtcCallState): callConnectedAction => ({
   type: CALL_CONNECTED,
   payload: {
     status
   }
 });
 
-export const callCompleted = (status: CallState): callCompletedAction => ({
+export const callCompleted = (status: RtcCallState): callCompletedAction => ({
   type: CALL_COMPLETED,
   payload: {
     status
@@ -64,20 +53,20 @@ type userCallingPayloadType = {
 };
 
 type callRejectedPayloadType = {
-  status: CallState;
+  status: RtcCallState;
 };
 
 type callConnectedPayloadType = {
-  status: CallState;
+  status: RtcCallState;
 };
 
 type callCompletedPayloadType = {
-  status: CallState;
+  status: RtcCallState;
 };
 
 export interface RtcState {
   peerUserId: string;
-  callState: CallState;
+  callState: RtcCallState;
 }
 export interface userCalledAction {
   type: typeof USER_CALLED;
@@ -106,7 +95,7 @@ export interface callCompletedAction {
 
 const initialState: RtcState = {
   peerUserId: "",
-  callState: CallState.IDLE
+  callState: RtcCallState.IDLE
 };
 
 const RtcStateReducer = (
@@ -118,14 +107,14 @@ const RtcStateReducer = (
       return {
         ...state,
         peerUserId: action.payload.userId,
-        callState: CallState.DIALING
+        callState: RtcCallState.DIALING
       };
     }
     case USER_CALLING: {
       return {
         ...state,
         peerUserId: action.payload.userId,
-        callState: CallState.RECEIVING_CALL
+        callState: RtcCallState.RECEIVING_CALL
       };
     }
     case CALL_REJECTED: {

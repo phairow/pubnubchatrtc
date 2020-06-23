@@ -12,34 +12,23 @@ import {
 import { ThemeContext } from "styled-components";
 import { getViewStates } from "../../layout/Selectors";
 import { rtcViewHidden, rtcViewDisplayed } from "../../layout/LayoutActions";
-import {
-  CallState,
-  getPeerUserId,
-  getCallState,
-  userCalling
-} from "../RtcModel";
+import { getPeerUserId, getCallState, userCalling } from "../RtcModel";
+import { RtcCallState } from "../RtcCallState";
 import { sendMessage as sendPubnubMessage } from "pubnub-redux";
 import { MessageType, getMessagesById } from "../../messages/messageModel";
 import { getUsersById } from "../../users/userModel";
 import { createSelector } from "reselect";
 import { getLoggedInUserId } from "../../authentication/authenticationModel";
 import { callConnected } from "../RtcModel";
+import RtcSettings from "config/rtcSettings.json";
 
-let dialingTimeoutSeconds = 3;
+const ICE_CONFIG = RtcSettings.rtcIceConfig;
+const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 
-let iceServers = [
-  {
-    urls: "stun:68.183.24.218:3478"
-  },
-  {
-    urls: "stun:stun.l.google.com:19302"
-  }
-];
-
-export const getCallMessages = createSelector(
+export const getLastCallMessage = createSelector(
   [getMessagesById, getLoggedInUserId, getUsersById],
   (messages, userId, users): any => {
-    return messages[userId]
+    let userMessages = messages[userId]
       ? Object.values(messages[userId])
           .filter(message => message.channel === userId)
           .map((message): any => {
@@ -60,6 +49,10 @@ export const getCallMessages = createSelector(
             };
           })
       : [];
+
+    return userMessages.length > 0
+      ? userMessages[userMessages.length - 1]
+      : undefined;
   }
 );
 
@@ -70,7 +63,7 @@ const RtcDisplay = () => {
   const dispatch = useDispatch();
   const peerUserId = useSelector(getPeerUserId);
   const callState = useSelector(getCallState);
-  const callMessages = useSelector(getCallMessages);
+  const lastCallMessage = useSelector(getLastCallMessage);
   const views = useSelector(getViewStates);
   const myId = useSelector(getLoggedInUserId);
   const theme = useContext(ThemeContext);
@@ -132,13 +125,13 @@ const RtcDisplay = () => {
         channel: peerUserId,
         message: {
           type: MessageType.Rtc,
-          callState: CallState.OUTGOING_CALL_CONNECTED,
+          callState: RtcCallState.OUTGOING_CALL_CONNECTED,
           senderId: myId
         }
       })
     );
 
-    dispatch(callConnected(CallState.INCOMMING_CALL_CONNECTED));
+    dispatch(callConnected(RtcCallState.INCOMMING_CALL_CONNECTED));
   };
 
   const toggleVideo = () => {
@@ -152,14 +145,17 @@ const RtcDisplay = () => {
   };
 
   useEffect(() => {
-    if (!dialed && callState === CallState.DIALING) {
+    let offer: object = {};
+
+    if (!dialed && callState === RtcCallState.DIALING) {
       let myPeerConnection = new RTCPeerConnection({
-        iceServers
+        iceServers: ICE_CONFIG
       });
 
       myPeerConnection
         .createOffer()
-        .then(function(offer) {
+        .then(function(o) {
+          offer = o;
           console.log("offercreated", offer);
           return myPeerConnection.setLocalDescription(offer);
         })
@@ -168,12 +164,18 @@ const RtcDisplay = () => {
         })
         .catch(e => console.log("error in offer", e));
 
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        stream
+          .getTracks()
+          .forEach(track => myPeerConnection.addTrack(track, stream));
+      });
       dispatch(
         sendPubnubMessage({
           channel: peerUserId,
           message: {
             type: MessageType.Rtc,
-            callState: CallState.DIALING,
+            callState: RtcCallState.DIALING,
+            peerDescription: offer,
             senderId: myId
           }
         })
@@ -181,36 +183,66 @@ const RtcDisplay = () => {
       setDialed(true);
     }
 
-    if (callMessages && callMessages[callMessages.length - 1]) {
-      const message = callMessages[callMessages.length - 1];
-
+    if (lastCallMessage) {
       if (
-        callState !== CallState.INCOMMING_CALL_CONNECTED &&
-        callState !== CallState.OUTGOING_CALL_CONNECTED
+        callState !== RtcCallState.INCOMMING_CALL_CONNECTED &&
+        callState !== RtcCallState.OUTGOING_CALL_CONNECTED
       ) {
         if (
-          message.type === MessageType.Rtc &&
-          message.callState === CallState.DIALING
+          lastCallMessage.type === MessageType.Rtc &&
+          lastCallMessage.callState === RtcCallState.DIALING
         ) {
-          dispatch(userCalling(message.sender.id));
+          dispatch(userCalling(lastCallMessage.sender.id));
           dispatch(rtcViewDisplayed());
+
+          let myPeerConnection = new RTCPeerConnection({
+            iceServers: ICE_CONFIG
+          });
+
+          if (lastCallMessage.peerDescription) {
+            myPeerConnection
+              .createOffer()
+              .then(function(o) {
+                offer = o;
+                console.log("offercreated", offer);
+                let desc = new RTCSessionDescription(
+                  lastCallMessage.peerDescription.sdp
+                );
+                myPeerConnection.setRemoteDescription(
+                  new RTCSessionDescription(desc)
+                );
+
+                myPeerConnection.ontrack = event => {
+                  // don't set srcObject again if it is already set.
+                  if ((document.querySelector("#myvideo") as any).srcObject)
+                    return;
+                  (document.querySelector("#myvideo") as any).srcObject =
+                    event.streams[0];
+                };
+                myPeerConnection.setLocalDescription(offer);
+              })
+              .then(function() {
+                console.log(myPeerConnection.localDescription);
+              })
+              .catch(e => console.log("error in offer", e));
+          }
         } else if (
-          message.type === MessageType.Rtc &&
-          message.callState === CallState.OUTGOING_CALL_CONNECTED
+          lastCallMessage.type === MessageType.Rtc &&
+          lastCallMessage.callState === RtcCallState.OUTGOING_CALL_CONNECTED
         ) {
           setDialed(false); // we are done dialing
-          dispatch(callConnected(CallState.OUTGOING_CALL_CONNECTED));
+          dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
         }
       }
 
       if (
-        message.type === MessageType.Rtc &&
-        message.callState === CallState.OUTGOING_CALL_COMPLETED
+        lastCallMessage.type === MessageType.Rtc &&
+        lastCallMessage.callState === RtcCallState.OUTGOING_CALL_COMPLETED
       ) {
-        dispatch(callConnected(CallState.OUTGOING_CALL_COMPLETED));
+        dispatch(callConnected(RtcCallState.OUTGOING_CALL_COMPLETED));
       }
     }
-  }, [callMessages, callState, dialed, dispatch, myId, peerUserId]);
+  }, [lastCallMessage, callState, dialed, dispatch, myId, peerUserId]);
 
   const closeMedia = () => {
     disableMedia();
@@ -224,18 +256,18 @@ const RtcDisplay = () => {
         channel: peerUserId,
         message: {
           type: MessageType.Rtc,
-          callState: CallState.OUTGOING_CALL_COMPLETED,
+          callState: RtcCallState.OUTGOING_CALL_COMPLETED,
           senderId: myId
         }
       })
     );
 
-    if (callState === CallState.OUTGOING_CALL_CONNECTED) {
-      dispatch(callConnected(CallState.OUTGOING_CALL_COMPLETED));
+    if (callState === RtcCallState.OUTGOING_CALL_CONNECTED) {
+      dispatch(callConnected(RtcCallState.OUTGOING_CALL_COMPLETED));
     }
 
-    if (callState === CallState.INCOMMING_CALL_CONNECTED) {
-      dispatch(callConnected(CallState.INCOMMING_CALL_CONNECTED));
+    if (callState === RtcCallState.INCOMMING_CALL_CONNECTED) {
+      dispatch(callConnected(RtcCallState.INCOMMING_CALL_CONNECTED));
     }
 
     closeMedia();
@@ -256,20 +288,20 @@ const RtcDisplay = () => {
       <Body>
         <button onClick={toggleVideo}>Video ({video ? "on" : "off"})</button>
         <button onClick={toggleAudio}>Audio ({audio ? "on" : "off"})</button>
-        {(callState === CallState.OUTGOING_CALL_CONNECTED ||
-          callState === CallState.INCOMMING_CALL_CONNECTED) && (
+        {(callState === RtcCallState.OUTGOING_CALL_CONNECTED ||
+          callState === RtcCallState.INCOMMING_CALL_CONNECTED) && (
           <button onClick={endCall}>Connected (click to end call)</button>
         )}
         <VideoWrapper>
-          {callState === CallState.DIALING && <div>Dialing ...</div>}
-          {callState === CallState.RECEIVING_CALL && (
+          {callState === RtcCallState.DIALING && <div>Dialing ...</div>}
+          {callState === RtcCallState.RECEIVING_CALL && (
             <div>
               Receiving Call ...
               <button onClick={answerCall}>Answer</button>
             </div>
           )}
-          {(callState === CallState.OUTGOING_CALL_COMPLETED ||
-            callState === CallState.INCOMMING_CALL_COMPLETED) && (
+          {(callState === RtcCallState.OUTGOING_CALL_COMPLETED ||
+            callState === RtcCallState.INCOMMING_CALL_COMPLETED) && (
             <div>Call Completed</div>
           )}
           <video id="myvideo" autoPlay={true} playsInline={true}></video>

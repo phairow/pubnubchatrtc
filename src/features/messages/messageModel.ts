@@ -4,7 +4,7 @@ import {
   createMessageReducer,
   Message as PubNubMessageEnvelope
 } from "pubnub-redux";
-import { CallState } from "features/rtc/RtcModel";
+import { RtcCallState } from "features/rtc/RtcCallState";
 
 /**
  * Define the types of messages that this application is designed to work with.
@@ -55,7 +55,9 @@ export interface RtcMessage extends BaseMessage {
   /**
    * The message content with a UTF-8 unicode encoding
    */
-  callState: CallState;
+  callState: RtcCallState;
+
+  peerDescription?: object;
 }
 
 /**
