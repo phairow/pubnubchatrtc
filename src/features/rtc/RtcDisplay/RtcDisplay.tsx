@@ -144,6 +144,14 @@ const RtcDisplay = () => {
     });
   };
 
+  peerConnection.ontrack = e => {
+    if (
+      (document.querySelector("#myvideo") as any).srcObject! === e.streams[0]
+    ) {
+      (document.querySelector("#myvideo") as any).srcObject = e.streams[0];
+    }
+  };
+
   const disableVideo = () => {
     (document.querySelector("#myvideo") as any).srcObject &&
       (document.querySelector("#myvideo") as any).srcObject
