@@ -57,6 +57,8 @@ export interface RtcMessage extends BaseMessage {
    */
   callState: RtcCallState;
 
+  startTime: number;
+
   peerDescription?: object;
 }
 

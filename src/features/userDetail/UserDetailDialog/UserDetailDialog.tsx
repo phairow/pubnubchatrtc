@@ -17,21 +17,23 @@ import {
 import { ThemeContext } from "styled-components";
 import { useMediaQuery } from "foundations/hooks/useMediaQuery";
 import {
-  userDetailViewHidden,
-  rtcViewDisplayed
+  rtcViewDisplayed,
+  userDetailViewHidden
 } from "../../layout/LayoutActions";
 import { getSelectedUserId } from "../userDetailModel";
 import { getUsersById } from "../../users/userModel";
 import { PresenceIndicatorIcon } from "../../../foundations/components/icons/PresenceIndicatorIcon";
 import { getPresenceByConversationId } from "features/memberPresence/memberPresenceModel";
 import { getCurrentConversationId } from "features/currentConversation/currentConversationModel";
-import { userCalled } from "../../rtc/RtcModel";
+import { callSignalSent } from "../../rtc/RtcModel";
+import { getLoggedInUserId } from "../../authentication/authenticationModel";
 
 const UserDetailDialog = () => {
   const dispatch = useDispatch();
   const views = useSelector(getViewStates);
   const theme = useContext(ThemeContext);
   const isMedium = useMediaQuery(theme.mediaQueries.medium);
+  const loggedInUserId = useSelector(getLoggedInUserId);
   const selectedUserId = useSelector(getSelectedUserId);
   const usersById = useSelector(getUsersById);
   const currentConversationId = useSelector(getCurrentConversationId);
@@ -46,9 +48,8 @@ const UserDetailDialog = () => {
     }).length > 0;
 
   const initiateCall = () => {
-    dispatch(userCalled(user.id));
+    dispatch(callSignalSent(user.id, new Date().getTime()));
     dispatch(rtcViewDisplayed());
-    dispatch(userDetailViewHidden());
   };
 
   return (
@@ -76,10 +77,13 @@ const UserDetailDialog = () => {
             <CrossIcon color={theme.colors.normalText} title="close" />
           </CloseButton>
         </Header>
-        <Call isConnected={isConnected} onClick={initiateCall}>
-          Initiate a call{" "}
-          {isConnected || "(" + userName + " may not be online)"}
-        </Call>
+        {loggedInUserId !== selectedUserId && (
+          <Call isConnected={isConnected} onClick={initiateCall}>
+            Initiate a call
+            {isConnected || " (" + userName + " may not be online)"}
+          </Call>
+        )}
+        {loggedInUserId === selectedUserId && <div>My Profile</div>}
       </Modal>
     </Overlay>
   );

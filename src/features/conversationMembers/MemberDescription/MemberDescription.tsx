@@ -1,5 +1,8 @@
 import React from "react";
 import { UserInitialsAvatar } from "foundations/components/UserInitialsAvatar";
+import { selectUser } from "../../userDetail/userDetailModel";
+import { useDispatch } from "react-redux";
+import { userDetailViewDisplayed } from "../../layout/LayoutActions";
 
 import {
   Wrapper,
@@ -26,6 +29,13 @@ interface MemberDescriptionProps {
 }
 
 const MemberDescription = ({ user, you }: MemberDescriptionProps) => {
+  const dispatch = useDispatch();
+
+  const openUserDetailsOverlay = () => {
+    dispatch(selectUser(user.id));
+    dispatch(userDetailViewDisplayed());
+  };
+
   return (
     <Wrapper>
       <Avatar>
@@ -38,7 +48,7 @@ const MemberDescription = ({ user, you }: MemberDescriptionProps) => {
         {user.presence && <PresenceDot presence={user.presence} size={7} />}
       </Avatar>
       <About>
-        <UserName muted={!user.presence}>
+        <UserName muted={!user.presence} onClick={openUserDetailsOverlay}>
           {user.name}
           {you && " (you)"}
         </UserName>

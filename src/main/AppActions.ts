@@ -29,11 +29,14 @@ import { MessageReceivedAction } from "pubnub-redux/dist/features/message/Messag
 import { MessageEnvelope } from "features/messages/messageModel";
 import { userSelectedAction } from "../features/userDetail/userDetailModel";
 import {
-  userCalledAction,
-  userCallingAction,
+  callMissedAction,
+  callNotAnsweredAction,
+  callSignalSentAction,
+  callSignalReceivedAction,
   callRejectedAction,
   callConnectedAction,
-  callCompletedAction
+  callCompletedAction,
+  callAcceptedAction
 } from "../features/rtc/RtcModel";
 
 /**
@@ -67,8 +70,11 @@ export type AppActions =
   | userDetailViewDisplayedAction
   | userDetailViewHiddenAction
   | userSelectedAction
-  | userCalledAction
-  | userCallingAction
+  | callSignalSentAction
+  | callSignalReceivedAction
   | callRejectedAction
   | callConnectedAction
-  | callCompletedAction;
+  | callCompletedAction
+  | callMissedAction
+  | callNotAnsweredAction
+  | callAcceptedAction;

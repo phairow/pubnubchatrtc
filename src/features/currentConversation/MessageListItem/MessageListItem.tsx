@@ -39,9 +39,12 @@ const MessageListItem = ({ messageFragment, avatar }: MessageProps) => {
   const usersById = useSelector(getUsersById);
   let hasSender = false;
 
-  const openOverlay = () => {
-    dispatch(selectUser(messageFragment.sender.id));
-    dispatch(userDetailViewDisplayed());
+  const openUserDetailsOverlay = () => {
+    if (hasSender) {
+      // don't open overlay for PubNub Bot
+      dispatch(selectUser(messageFragment.sender.id));
+      dispatch(userDetailViewDisplayed());
+    }
   };
 
   if (messageFragment.sender && messageFragment.sender.id) {
@@ -53,7 +56,7 @@ const MessageListItem = ({ messageFragment, avatar }: MessageProps) => {
       <Avatar>{avatar}</Avatar>
       <Body>
         <Header>
-          <SenderName showDetails={hasSender} onClick={openOverlay}>
+          <SenderName showDetails={hasSender} onClick={openUserDetailsOverlay}>
             {sender.name}
           </SenderName>
           <TimeSent>

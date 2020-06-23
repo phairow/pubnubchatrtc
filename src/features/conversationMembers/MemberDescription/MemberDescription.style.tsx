@@ -42,6 +42,7 @@ export const UserName = styled.div<{ muted: boolean }>`
   font-size: ${({ theme }) => theme.fontSizes.medium};
   text-transform: capitalize;
   color: ${({ theme }) => theme.colors.importantText};
+  cursor: pointer;
 `;
 
 export const UserTitle = styled.div<{ muted: boolean }>`

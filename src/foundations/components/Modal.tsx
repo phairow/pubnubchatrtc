@@ -30,6 +30,7 @@ export const Modal = styled(motion.section)`
   padding: ${({ theme }) => theme.space[0]};
   text-align: center;
   flex-direction: column;
+  overflow: auto;
   background: ${({ theme }) => theme.backgrounds.panel};
   ${({ theme }) => theme.mediaQueries.medium} {
     border-radius: ${({ theme }) => theme.radii.strong};
