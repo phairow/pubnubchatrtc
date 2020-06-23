@@ -11,13 +11,14 @@ const fonts = {
   app: '"Roboto", sans-serif'
 } as const;
 /* fonts */
-const fontSizes = ["0px", "11px", "13px", "15px", "20px"] as const;
+const fontSizes = ["0px", "11px", "13px", "15px", "20px", "16px"] as const;
 const fontSizesAliases = {
   none: fontSizes[0],
   small: fontSizes[1],
   regular: fontSizes[2],
   medium: fontSizes[3],
-  large: fontSizes[4]
+  large: fontSizes[4],
+  messageTextInput: fontSizes[5] // stop ios from zooming by setting font size to 16
 };
 const fontWeights = [0, 300, 400, 500, 700, 900] as const;
 const fontWeightsAliases = {
