@@ -72,7 +72,7 @@ let pubnubIceListener: Pubnub.ListenerParameters = {};
 
 const RtcDisplay = () => {
   const pubnub = usePubNub();
-  const [video, setVideo] = useState(false);
+  const [video, setVideo] = useState(true);
   const [audio, setAudio] = useState(false);
   const [dialed, setDialed] = useState(false);
   const [answered, setAnswered] = useState(false);
@@ -124,10 +124,12 @@ const RtcDisplay = () => {
       // add track
       let stream = await navigator.mediaDevices.getUserMedia({
         audio,
-        video: !video
+        video: true
       });
 
+      console.log("adding tracks");
       stream.getTracks().forEach(track => {
+        console.log("track added");
         peerConnection.addTrack(track, stream);
       });
     }
@@ -145,6 +147,7 @@ const RtcDisplay = () => {
   };
 
   peerConnection.ontrack = e => {
+    console.log("on track received");
     if (
       (document.querySelector("#myvideo") as any).srcObject! === e.streams[0]
     ) {
