@@ -229,50 +229,53 @@ const RtcDisplay = () => {
 
     peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
-      const offer = await peerConnection.createOffer({
-        offerToReceiveVideo: true,
-        offerToReceiveAudio: true
-      });
 
-      if (peerConnection.signalingState !== "stable") return;
+      if (peerConnection.connectionState !== "connected") {
+        const offer = await peerConnection.createOffer({
+          offerToReceiveVideo: true,
+          offerToReceiveAudio: true
+        });
 
-      console.log("negotiation: attempting local offer", offer);
+        if (peerConnection.signalingState !== "stable") return;
 
-      try {
-        await peerConnection.setLocalDescription(offer);
-      } catch (e) {
-        console.log("negotiation: error setting local desc: ", e);
-      }
+        console.log("negotiation: attempting local offer", offer);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video
-      });
-
-      console.log("negotiation: adding tracks");
-
-      stream
-        .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
-
-      console.log(
-        "negotiation: offer length",
-        peerConnection.localDescription?.toJSON().length
-      );
-
-      console.log(
-        "negotiation: sending offer",
-        peerConnection.localDescription
-      );
-
-      console.log("negotiation: sending local offer to peer");
-
-      pubnub.publish({
-        channel: currentCall.peerUserId,
-        message: {
-          offer: peerConnection.localDescription
+        try {
+          await peerConnection.setLocalDescription(offer);
+        } catch (e) {
+          console.log("negotiation: error setting local desc: ", e);
         }
-      });
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio,
+          video
+        });
+
+        console.log("negotiation: adding tracks");
+
+        stream
+          .getTracks()
+          .forEach(track => peerConnection.addTrack(track, stream));
+
+        console.log(
+          "negotiation: offer length",
+          peerConnection.localDescription?.toJSON().length
+        );
+
+        console.log(
+          "negotiation: sending offer",
+          peerConnection.localDescription
+        );
+
+        console.log("negotiation: sending local offer to peer");
+
+        pubnub.publish({
+          channel: currentCall.peerUserId,
+          message: {
+            offer: peerConnection.localDescription
+          }
+        });
+      }
     };
   };
 
