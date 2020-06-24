@@ -37,6 +37,8 @@ const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 // TODO: figure out how to handle peer connections in a clean way
 let peerConnection: RTCPeerConnection;
 
+let pendingIceCandidates: any[] = [];
+
 export const getLastCallMessage = createSelector(
   [getMessagesById, getLoggedInUserId, getUsersById],
   (messages, userId, users): any => {
@@ -100,6 +102,9 @@ const RtcDisplay = () => {
         } catch (e) {
           console.log("condidate: error setting ice candidate: ", e);
         }
+      } else {
+        // some ice candidates are sent before the offer is answered
+        pendingIceCandidates.push(message.message.candidate);
       }
     }
 
@@ -136,6 +141,12 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("offer: error setting local desc: ", e);
       }
+
+      // apply pending ice candidates
+      pendingIceCandidates.forEach(candidate => {
+        peerConnection.addIceCandidate(candidate);
+      });
+      pendingIceCandidates.slice(0, pendingIceCandidates.length);
 
       // send answer
       console.log(
@@ -205,6 +216,17 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("negotiation: error setting local desc: ", e);
       }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video
+      });
+
+      console.log("offer: adding tracks");
+
+      stream
+        .getTracks()
+        .forEach(track => peerConnection.addTrack(track, stream));
 
       console.log("negotiation: sending local offer to peer");
       pubnub.publish({
