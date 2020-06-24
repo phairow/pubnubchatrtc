@@ -171,7 +171,6 @@ const RtcDisplay = () => {
       );
       pubnub.publish({
         channel: currentCall.peerUserId,
-        sendByPost: true,
         message: {
           answer: peerConnection.localDescription
         }
@@ -207,7 +206,6 @@ const RtcDisplay = () => {
 
       pubnub.publish({
         channel: currentCall.peerUserId,
-        sendByPost: true,
         message: {
           candidate: event.candidate
         }
@@ -271,7 +269,6 @@ const RtcDisplay = () => {
 
       pubnub.publish({
         channel: currentCall.peerUserId,
-        sendByPost: true,
         message: {
           offer: peerConnection.localDescription
         }
@@ -353,7 +350,6 @@ const RtcDisplay = () => {
     dispatch(
       sendPubnubMessage({
         channel: lastCallMessage.sender.id,
-        sendByPost: true,
         message: {
           type: MessageType.Rtc,
           callState: RtcCallState.OUTGOING_CALL_CONNECTED,
@@ -376,7 +372,6 @@ const RtcDisplay = () => {
       dispatch(
         sendPubnubMessage({
           channel: currentCall.peerUserId,
-          sendByPost: true,
           message: {
             type: MessageType.Rtc,
             callState: RtcCallState.DIALING,
@@ -438,7 +433,6 @@ const RtcDisplay = () => {
 
       pubnub.publish({
         channel: currentCall.peerUserId,
-        sendByPost: true,
         message: {
           offer: peerConnection.localDescription
         }
@@ -521,7 +515,6 @@ const RtcDisplay = () => {
     dispatch(
       sendPubnubMessage({
         channel: currentCall.peerUserId,
-        sendByPost: true,
         message: {
           type: MessageType.Rtc,
           callState: dialed
