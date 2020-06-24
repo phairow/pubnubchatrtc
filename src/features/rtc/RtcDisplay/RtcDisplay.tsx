@@ -88,7 +88,7 @@ let pubnubIceListener: Pubnub.ListenerParameters = {};
 
 const RtcDisplay = () => {
   const pubnub = usePubNub();
-  const [video, setVideo] = useState(false);
+  const [video, setVideo] = useState(true);
   const [audio, setAudio] = useState(false);
   const [dialed, setDialed] = useState(false);
   const [answered, setAnswered] = useState(false);
@@ -119,6 +119,17 @@ const RtcDisplay = () => {
       await peerConnection.setRemoteDescription(
         new RTCSessionDescription(message.message.offer)
       );
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video
+      });
+
+      console.log("adding tracks");
+      stream
+        .getTracks()
+        .forEach(track => peerConnection.addTrack(track, stream));
+
       const answer = await peerConnection.createAnswer({
         offerToReceiveVideo: true,
         offerToReceiveAudio: true
@@ -142,6 +153,16 @@ const RtcDisplay = () => {
       peerConnection.setRemoteDescription(
         new RTCSessionDescription(message.message.answer)
       );
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video
+      });
+
+      console.log("adding tracks");
+      stream
+        .getTracks()
+        .forEach(track => peerConnection.addTrack(track, stream));
     }
   };
 
@@ -167,19 +188,6 @@ const RtcDisplay = () => {
 
   peerConnection.onconnectionstatechange = async e => {
     console.log("onconnectionstatechange", peerConnection.connectionState);
-    if (peerConnection.connectionState === "connected") {
-      console.log("connected");
-      // add track
-      let stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video
-      });
-
-      console.log("adding tracks");
-      stream
-        .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
-    }
   };
 
   peerConnection.onnegotiationneeded = async () => {
@@ -267,6 +275,7 @@ const RtcDisplay = () => {
   const answerCall = () => {
     console.log("answer call");
     setAnswered(true);
+    updateMedia({ audio, video });
 
     dispatch(
       callAccepted(lastCallMessage.sender.id, lastCallMessage.startTime)
@@ -314,6 +323,7 @@ const RtcDisplay = () => {
     const outgoingCallAccepted = async () => {
       console.log("outgoing call accepted");
       setPeerAnswered(true);
+      updateMedia({ audio, video });
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
 
       const offer = await peerConnection.createOffer({
@@ -394,6 +404,7 @@ const RtcDisplay = () => {
     setDialed(false);
     setAnswered(false);
     setPeerAnswered(false);
+    setVideo(true);
   };
 
   const endCall = () => {
