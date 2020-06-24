@@ -73,7 +73,7 @@ let pubnubIceListener: Pubnub.ListenerParameters = {};
 const RtcDisplay = () => {
   const pubnub = usePubNub();
   const [video, setVideo] = useState(true);
-  const [audio, setAudio] = useState(false);
+  const [audio, setAudio] = useState(true);
   const [dialed, setDialed] = useState(false);
   const [answered, setAnswered] = useState(false);
   const [peerAnswered, setPeerAnswered] = useState(false);
@@ -225,13 +225,6 @@ const RtcDisplay = () => {
   };
 
   const disableAudio = () => {
-    // (document.querySelector("#remoteaudio") as any).srcObject &&
-    //   (document.querySelector("#remoteaudio") as any).srcObject
-    //     .getTracks()
-    //     .forEach((track: MediaStreamTrack) => {
-    //       track.stop();
-    //     });
-    // (document.querySelector("#remoteaudio") as any).srcObject = undefined;
     setAudio(false);
   };
 
@@ -251,9 +244,7 @@ const RtcDisplay = () => {
   };
 
   const enableAudio = async (mediaConstraints: MediaStreamConstraints) => {
-    // let stream = navigator.mediaDevices.getUserMedia(mediaConstraints);
-    // disableVideo();
-    // (document.querySelector("#remoteaudio") as any).srcObject = stream;
+    disableVideo();
   };
 
   const updateMedia = (mediaConstraints: MediaStreamConstraints) => {
