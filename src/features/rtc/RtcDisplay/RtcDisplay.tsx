@@ -90,6 +90,17 @@ const RtcDisplay = () => {
   pubnub.removeListener(pubnubIceListener);
   pubnub.addListener(pubnubIceListener);
 
+  const connectMedia = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio,
+      video
+    });
+
+    console.log("connconnect media: adding tracks");
+
+    stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+  };
+
   pubnubIceListener.message = async message => {
     if (message.message.candidate === null) {
       // add last candidate
@@ -134,6 +145,8 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
+      connectMedia();
+
       const answer = await peerConnection.createAnswer({
         offerToReceiveVideo: true,
         offerToReceiveAudio: true
@@ -175,6 +188,8 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
+
+      connectMedia();
     }
   };
 
@@ -216,16 +231,7 @@ const RtcDisplay = () => {
       console.log("onconnectionstatechange", peerConnection.connectionState);
 
       if (peerConnection.connectionState === "connected") {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio,
-          video
-        });
-
-        console.log("connected: adding tracks");
-
-        stream
-          .getTracks()
-          .forEach(track => peerConnection.addTrack(track, stream));
+        connectMedia();
       }
     };
 
