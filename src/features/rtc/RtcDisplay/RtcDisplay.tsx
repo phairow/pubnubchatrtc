@@ -236,6 +236,8 @@ const RtcDisplay = () => {
         offerToReceiveAudio: true
       });
 
+      if (peerConnection.signalingState !== "stable") return;
+
       console.log("negotiation: attempting local offer", offer);
 
       try {
