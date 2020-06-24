@@ -148,6 +148,8 @@ const RtcDisplay = () => {
       });
       pendingIceCandidates.slice(0, pendingIceCandidates.length);
 
+      console.log("answer: sending answer ", peerConnection.localDescription);
+
       // send answer
       console.log(
         "offer: answer sent to peer",
@@ -179,6 +181,9 @@ const RtcDisplay = () => {
     // send ice candidates to peer
     peerConnection.onicecandidate = event => {
       console.log("candidate sent to peer");
+
+      console.log("candidate: sending candidate ", event.candidate);
+
       pubnub.publish({
         channel: currentCall.peerUserId,
         sendByPost: true,
@@ -223,13 +228,19 @@ const RtcDisplay = () => {
         video
       });
 
-      console.log("offer: adding tracks");
+      console.log("negotiation: adding tracks");
 
       stream
         .getTracks()
         .forEach(track => peerConnection.addTrack(track, stream));
 
+      console.log(
+        "negotiation: sending offer ",
+        peerConnection.localDescription
+      );
+
       console.log("negotiation: sending local offer to peer");
+
       pubnub.publish({
         channel: currentCall.peerUserId,
         message: {
@@ -372,13 +383,16 @@ const RtcDisplay = () => {
         video
       });
 
-      console.log("offer: adding tracks");
+      console.log("accepted: adding tracks");
 
       stream
         .getTracks()
         .forEach(track => peerConnection.addTrack(track, stream));
 
+      console.log("accepted: sending offer ", peerConnection.localDescription);
+
       console.log("accepted: sending local offer to peer");
+
       pubnub.publish({
         channel: currentCall.peerUserId,
         message: {
