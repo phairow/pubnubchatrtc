@@ -97,19 +97,6 @@ const RtcDisplay = () => {
   pubnub.removeListener(pubnubIceListener);
   pubnub.addListener(pubnubIceListener);
 
-  const connectMedia = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio,
-      video
-    });
-
-    console.log("connect media: adding tracks");
-
-    stream
-      .getTracks()
-      .forEach(track => state.peerConnection.addTrack(track, stream));
-  };
-
   pubnubIceListener.message = async message => {
     if (message.message.candidate === null) {
       // add last candidate
@@ -144,12 +131,6 @@ const RtcDisplay = () => {
     if (message.message.offer && message.message.offer.type === "offer") {
       // we got an ice offer from a peer
 
-      if (state.peerConnection.signalingState !== "stable") {
-        if (!dialed) return;
-
-        await state.peerConnection.setLocalDescription({ type: "rollback" });
-      }
-
       console.log("offer received from peer", message.message.offer);
       try {
         await state.peerConnection.setRemoteDescription(message.message.offer);
@@ -157,20 +138,13 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      connectMedia();
-
-      const answer = await state.peerConnection.createAnswer({
-        offerToReceiveVideo: true,
-        offerToReceiveAudio: true
-      });
+      const answer = await state.peerConnection.createAnswer();
 
       try {
         await state.peerConnection.setLocalDescription(answer);
       } catch (e) {
         console.log("offer: error setting local desc: ", e);
       }
-
-      connectMedia();
 
       // apply pending ice candidates
       state.pendingIceCandidates.forEach(candidate => {
@@ -205,13 +179,22 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
-
-      connectMedia();
     }
   };
 
   const initPeerConnection = async () => {
     state.peerConnection = createPeerConnection(ICE_CONFIG);
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio,
+      video
+    });
+
+    console.log("connect media: adding tracks");
+
+    stream
+      .getTracks()
+      .forEach(track => state.peerConnection.addTrack(track, stream));
 
     // send ice candidates to peer
     state.peerConnection.onicecandidate = async event => {
@@ -253,19 +236,12 @@ const RtcDisplay = () => {
         "onconnectionstatechange",
         state.peerConnection.connectionState
       );
-
-      // if (state.peerConnection.connectionState === "connected") {
-      //   connectMedia();
-      // }
     };
 
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
-      const offer = await state.peerConnection.createOffer({
-        offerToReceiveVideo: true,
-        offerToReceiveAudio: true
-      });
+      const offer = await state.peerConnection.createOffer();
 
       console.log("negotiation: attempting local offer", offer);
 
@@ -274,8 +250,6 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("negotiation: error setting local desc: ", e);
       }
-
-      connectMedia();
 
       console.log(
         "negotiation: offer length",
@@ -436,8 +410,6 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("accepted: error setting local desc: ", e);
       }
-
-      connectMedia();
 
       console.log(
         "accepted: offer length",
