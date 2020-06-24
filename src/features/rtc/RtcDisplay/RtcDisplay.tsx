@@ -186,6 +186,17 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video
+      });
+
+      console.log("negotiation: adding tracks");
+
+      stream
+        .getTracks()
+        .forEach(track => peerConnection.addTrack(track, stream));
     }
   };
 
