@@ -92,11 +92,14 @@ const RtcDisplay = () => {
     if (message.message.candidate && message.message.candidate.candidate) {
       // we got an ice candidate from a peer
       console.log("candidate received from peer", message.message.candidate);
-      try {
-        // let iceCandidate = new RTCIceCandidate(message.message.candidate);
-        await peerConnection.addIceCandidate(message.message.candidate);
-      } catch (e) {
-        console.log("condidate: error setting ice candidate: ", e);
+
+      if (peerConnection && peerConnection.connectionState !== "closed") {
+        try {
+          // let iceCandidate = new RTCIceCandidate(message.message.candidate);
+          await peerConnection.addIceCandidate(message.message.candidate);
+        } catch (e) {
+          console.log("condidate: error setting ice candidate: ", e);
+        }
       }
     }
 
@@ -322,10 +325,11 @@ const RtcDisplay = () => {
 
     const outgoingCallAccepted = async () => {
       console.log("accepted: outgoing call accepted");
-      initPeerConnection();
       setPeerAnswered(true);
       updateMedia({ audio, video });
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
+
+      initPeerConnection();
 
       const offer = await peerConnection.createOffer({
         offerToReceiveVideo: true,
@@ -366,7 +370,8 @@ const RtcDisplay = () => {
       dispatch(callCompleted(callState, endTime));
       closeMedia();
       peerConnection && peerConnection.close();
-      peerConnection = new RTCPeerConnection();
+      // peerConnection = new RTCPeerConnection();
+      // peerConnection.close(); /// leave with emp
     };
 
     // console.log('---');
