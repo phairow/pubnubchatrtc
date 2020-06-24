@@ -19,9 +19,6 @@ export const createPeerConnection = (
   state.peerConnection.oniceconnectionstatechange = event => {
     console.log("oniceconnectionstatechange", event);
   };
-  state.peerConnection.onicecandidateerror = event => {
-    console.log("onicecandidateerror", event);
-  };
   state.peerConnection.onconnectionstatechange = event => {
     console.log("onconnectionstatechange", event);
   };
