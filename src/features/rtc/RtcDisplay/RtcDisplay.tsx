@@ -35,9 +35,11 @@ const ICE_CONFIG = RtcSettings.rtcIceConfig;
 const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 
 // TODO: figure out how to handle peer connections in a clean way
-let peerConnection: RTCPeerConnection;
-
-let pendingIceCandidates: any[] = [];
+const state: any = {
+  peerConnection: undefined,
+  pendingIceCandidates: [],
+  offerPart1: undefined
+};
 
 export const getLastCallMessage = createSelector(
   [getMessagesById, getLoggedInUserId, getUsersById],
@@ -93,7 +95,7 @@ const RtcDisplay = () => {
   pubnubIceListener.message = async message => {
     if (message.message.candidate === null) {
       // add last candidate
-      await peerConnection.addIceCandidate({
+      await state.peerConnection.addIceCandidate({
         candidate: "",
         sdpMid: "0",
         sdpMLineIndex: 0
@@ -105,27 +107,40 @@ const RtcDisplay = () => {
       // we got an ice candidate from a peer
       console.log("candidate received from peer", message.message.candidate);
 
-      if (peerConnection && peerConnection.connectionState !== "closed") {
+      if (
+        state.peerConnection &&
+        state.peerConnection.connectionState !== "closed"
+      ) {
         try {
           // let iceCandidate = new RTCIceCandidate(message.message.candidate);
-          await peerConnection.addIceCandidate(message.message.candidate);
+          await state.peerConnection.addIceCandidate(message.message.candidate);
         } catch (e) {
           console.log("condidate: error setting ice candidate: ", e);
         }
       } else {
         // some ice candidates are sent before the offer is answered
-        pendingIceCandidates.push(message.message.candidate);
+        state.pendingIceCandidates.push(message.message.candidate);
       }
     }
 
-    if (message.message.offer && message.message.offer.type === "offer") {
+    if (message.message.offer1) {
+      state.offerPart1 = message.message.offer1;
+    }
+
+    if (message.message.offer2) {
       // we got an ice offer from a peer
 
       initPeerConnection();
 
-      console.log("offer received from peer", message.message.offer);
+      const offer = {
+        type: "offer",
+        sdp: state.offerPart1 + message.message.offer2
+      };
+      message.message.offer1 = "";
+
+      console.log("offer received from peer", offer);
       try {
-        await peerConnection.setRemoteDescription(message.message.offer);
+        await state.peerConnection.setRemoteDescription(offer);
       } catch (e) {
         console.log("offer: error setting remote desc: ", e);
       }
@@ -139,37 +154,40 @@ const RtcDisplay = () => {
 
       stream
         .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
+        .forEach(track => state.peerConnection.addTrack(track, stream));
 
-      const answer = await peerConnection.createAnswer({
+      const answer = await state.peerConnection.createAnswer({
         offerToReceiveVideo: true,
         offerToReceiveAudio: true
       });
 
       try {
-        await peerConnection.setLocalDescription(answer);
+        await state.peerConnection.setLocalDescription(answer);
       } catch (e) {
         console.log("offer: error setting local desc: ", e);
       }
 
       // apply pending ice candidates
-      pendingIceCandidates.forEach(candidate => {
-        peerConnection.addIceCandidate(candidate);
+      state.pendingIceCandidates.forEach((candidate: any) => {
+        state.peerConnection.addIceCandidate(candidate);
       });
-      pendingIceCandidates.slice(0, pendingIceCandidates.length);
+      state.pendingIceCandidates.slice(0, state.pendingIceCandidates.length);
 
-      console.log("answer: sending answer ", peerConnection.localDescription);
+      console.log(
+        "answer: sending answer ",
+        state.peerConnection.localDescription
+      );
 
       // send answer
       console.log(
         "offer: answer sent to peer",
-        peerConnection.localDescription
+        state.peerConnection.localDescription
       );
       pubnub.publish({
         channel: currentCall.peerUserId,
         sendByPost: true,
         message: {
-          answer: peerConnection.localDescription
+          answer: state.peerConnection.localDescription
         }
       });
     }
@@ -179,7 +197,7 @@ const RtcDisplay = () => {
       console.log("answer: answer received from peer", message.message.answer);
 
       try {
-        await peerConnection.setRemoteDescription(message.message.answer);
+        await state.peerConnection.setRemoteDescription(message.message.answer);
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
@@ -187,10 +205,10 @@ const RtcDisplay = () => {
   };
 
   const initPeerConnection = () => {
-    peerConnection = createPeerConnection(ICE_CONFIG);
+    state.peerConnection = createPeerConnection(ICE_CONFIG);
 
     // send ice candidates to peer
-    peerConnection.onicecandidate = event => {
+    state.peerConnection.onicecandidate = (event: any) => {
       console.log("candidate sent to peer");
 
       console.log("candidate: sending candidate ", event);
@@ -210,7 +228,7 @@ const RtcDisplay = () => {
       });
     };
 
-    peerConnection.ontrack = e => {
+    state.peerConnection.ontrack = (e: any) => {
       console.log("on track received");
       if (
         (document.querySelector("#remotevideo") as any).srcObject !==
@@ -221,13 +239,16 @@ const RtcDisplay = () => {
       }
     };
 
-    peerConnection.onconnectionstatechange = async e => {
-      console.log("onconnectionstatechange", peerConnection.connectionState);
+    state.peerConnection.onconnectionstatechange = async (e: any) => {
+      console.log(
+        "onconnectionstatechange",
+        state.peerConnection.connectionState
+      );
     };
 
-    peerConnection.onnegotiationneeded = async () => {
+    state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
-      const offer = await peerConnection.createOffer({
+      const offer = await state.peerConnection.createOffer({
         offerToReceiveVideo: true,
         offerToReceiveAudio: true
       });
@@ -235,7 +256,7 @@ const RtcDisplay = () => {
       console.log("negotiation: attempting local offer", offer);
 
       try {
-        await peerConnection.setLocalDescription(offer);
+        await state.peerConnection.setLocalDescription(offer);
       } catch (e) {
         console.log("negotiation: error setting local desc: ", e);
       }
@@ -249,28 +270,50 @@ const RtcDisplay = () => {
 
       stream
         .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
+        .forEach(track => state.peerConnection.addTrack(track, stream));
 
       console.log(
         "negotiation: offer length",
-        peerConnection.localDescription?.toJSON().length
+        state.peerConnection.localDescription?.toJSON().length
       );
 
-      console.log(
-        "negotiation: sending offer",
-        peerConnection.localDescription
-      );
-
-      console.log("negotiation: sending local offer to peer");
-
-      pubnub.publish({
-        channel: currentCall.peerUserId,
-        sendByPost: true,
-        message: {
-          offer: peerConnection.localDescription
-        }
-      });
+      sendOffer();
     };
+  };
+
+  const sendOffer = () => {
+    console.log(
+      "sendOffer: sending offer",
+      state.peerConnection.localDescription
+    );
+
+    const sdp = state.peerConnection.localDescription?.sdp;
+    console.log("sendOffer: offer length", sdp && sdp.length);
+    console.log("sendOffer: sending local offer to peer", sdp);
+
+    if (sdp) {
+      const halfLength = Math.floor(sdp.length / 2);
+      const part1 = sdp.slice(0, halfLength);
+      const part2 = sdp.slice(halfLength);
+
+      pubnub
+        .publish({
+          channel: currentCall.peerUserId,
+          sendByPost: true,
+          message: {
+            offer1: part1
+          }
+        })
+        .then(() => {
+          pubnub.publish({
+            channel: currentCall.peerUserId,
+            sendByPost: true,
+            message: {
+              offer2: part2
+            }
+          });
+        });
+    }
   };
 
   const disableVideo = () => {
@@ -395,7 +438,7 @@ const RtcDisplay = () => {
 
       initPeerConnection();
 
-      const offer = await peerConnection.createOffer({
+      const offer = await state.peerConnection.createOffer({
         offerToReceiveVideo: true,
         offerToReceiveAudio: true
       });
@@ -403,7 +446,7 @@ const RtcDisplay = () => {
       console.log("accepted: attempting local offer", offer);
 
       try {
-        await peerConnection.setLocalDescription(offer);
+        await state.peerConnection.setLocalDescription(offer);
       } catch (e) {
         console.log("accepted: error setting local desc: ", e);
       }
@@ -417,24 +460,9 @@ const RtcDisplay = () => {
 
       stream
         .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
+        .forEach(track => state.peerConnection.addTrack(track, stream));
 
-      console.log(
-        "accepted: offer length",
-        peerConnection.localDescription?.toJSON().length
-      );
-
-      console.log("accepted: sending offer ", peerConnection.localDescription);
-
-      console.log("accepted: sending local offer to peer");
-
-      pubnub.publish({
-        channel: currentCall.peerUserId,
-        sendByPost: true,
-        message: {
-          offer: peerConnection.localDescription
-        }
-      });
+      sendOffer();
     };
 
     const callEnded = async (callState: RtcCallState, endTime: number) => {
@@ -442,9 +470,9 @@ const RtcDisplay = () => {
       setDialed(false);
       dispatch(callCompleted(callState, endTime));
       closeMedia();
-      peerConnection && peerConnection.close();
-      // peerConnection = new RTCPeerConnection();
-      // peerConnection.close(); /// leave with emp
+      state.peerConnection && state.peerConnection.close();
+      // state.peerConnection = new RTCPeerConnection();
+      // state.peerConnection.close(); /// leave with emp
     };
 
     // console.log('---');
