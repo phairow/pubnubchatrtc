@@ -35,23 +35,7 @@ const ICE_CONFIG = RtcSettings.rtcIceConfig;
 const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 
 // TODO: figure out how to handle peer connections in a clean way
-const peerConnection = createPeerConnection(ICE_CONFIG);
-
-peerConnection.onicegatheringstatechange = event => {
-  console.log("onicegatheringstatechange", event);
-};
-peerConnection.oniceconnectionstatechange = event => {
-  console.log("oniceconnectionstatechange", event);
-};
-peerConnection.onicecandidateerror = event => {
-  console.log("onicecandidateerror", event);
-};
-peerConnection.onconnectionstatechange = event => {
-  console.log("onconnectionstatechange", event);
-};
-peerConnection.onsignalingstatechange = event => {
-  console.log("onsignalingstatechange", event);
-};
+let peerConnection: RTCPeerConnection;
 
 export const getLastCallMessage = createSelector(
   [getMessagesById, getLoggedInUserId, getUsersById],
@@ -118,6 +102,9 @@ const RtcDisplay = () => {
 
     if (message.message.offer && message.message.offer.type === "offer") {
       // we got an ice offer from a peer
+
+      initPeerConnection();
+
       console.log("offer received from peer", message.message.offer);
       try {
         await peerConnection.setRemoteDescription(message.message.offer);
@@ -131,6 +118,7 @@ const RtcDisplay = () => {
       });
 
       console.log("offer: adding tracks");
+
       stream
         .getTracks()
         .forEach(track => peerConnection.addTrack(track, stream));
@@ -171,52 +159,58 @@ const RtcDisplay = () => {
     }
   };
 
-  // send ice candidates to peer
-  peerConnection.onicecandidate = function(event) {
-    console.log("candidate sent to peer");
-    pubnub.publish({
-      channel: currentCall.peerUserId,
-      message: {
-        candidate: event.candidate
+  const initPeerConnection = () => {
+    peerConnection = createPeerConnection(ICE_CONFIG);
+
+    // send ice candidates to peer
+    peerConnection.onicecandidate = event => {
+      console.log("candidate sent to peer");
+      pubnub.publish({
+        channel: currentCall.peerUserId,
+        message: {
+          candidate: event.candidate
+        }
+      });
+    };
+
+    peerConnection.ontrack = e => {
+      console.log("on track received");
+      if (
+        (document.querySelector("#remotevideo") as any).srcObject !==
+        e.streams[0]
+      ) {
+        (document.querySelector("#remotevideo") as any).srcObject =
+          e.streams[0];
       }
-    });
-  };
+    };
 
-  peerConnection.ontrack = e => {
-    console.log("on track received");
-    if (
-      (document.querySelector("#remotevideo") as any).srcObject !== e.streams[0]
-    ) {
-      (document.querySelector("#remotevideo") as any).srcObject = e.streams[0];
-    }
-  };
+    peerConnection.onconnectionstatechange = async e => {
+      console.log("onconnectionstatechange", peerConnection.connectionState);
+    };
 
-  peerConnection.onconnectionstatechange = async e => {
-    console.log("onconnectionstatechange", peerConnection.connectionState);
-  };
+    peerConnection.onnegotiationneeded = async () => {
+      console.log("negotiation: on negotiation needed");
+      const offer = await peerConnection.createOffer({
+        offerToReceiveVideo: true,
+        offerToReceiveAudio: true
+      });
 
-  peerConnection.onnegotiationneeded = async () => {
-    console.log("negotiation: on negotiation needed");
-    const offer = await peerConnection.createOffer({
-      offerToReceiveVideo: true,
-      offerToReceiveAudio: true
-    });
+      console.log("negotiation: attempting local offer", offer);
 
-    console.log("negotiation: attempting local offer", offer);
-
-    try {
-      await peerConnection.setLocalDescription(offer);
-    } catch (e) {
-      console.log("negotiation: error setting local desc: ", e);
-    }
-
-    console.log("negotiation: sending local offer to peer");
-    pubnub.publish({
-      channel: currentCall.peerUserId,
-      message: {
-        offer: peerConnection.localDescription
+      try {
+        await peerConnection.setLocalDescription(offer);
+      } catch (e) {
+        console.log("negotiation: error setting local desc: ", e);
       }
-    });
+
+      console.log("negotiation: sending local offer to peer");
+      pubnub.publish({
+        channel: currentCall.peerUserId,
+        message: {
+          offer: peerConnection.localDescription
+        }
+      });
+    };
   };
 
   const disableVideo = () => {
@@ -332,6 +326,7 @@ const RtcDisplay = () => {
 
     const outgoingCallAccepted = async () => {
       console.log("accepted: outgoing call accepted");
+      initPeerConnection();
       setPeerAnswered(true);
       updateMedia({ audio, video });
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
@@ -349,6 +344,17 @@ const RtcDisplay = () => {
         console.log("accepted: error setting local desc: ", e);
       }
 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video
+      });
+
+      console.log("offer: adding tracks");
+
+      stream
+        .getTracks()
+        .forEach(track => peerConnection.addTrack(track, stream));
+
       console.log("accepted: sending local offer to peer");
       pubnub.publish({
         channel: currentCall.peerUserId,
@@ -363,6 +369,7 @@ const RtcDisplay = () => {
       setDialed(false);
       dispatch(callCompleted(callState, endTime));
       closeMedia();
+      peerConnection && peerConnection.close();
     };
 
     // console.log('---');

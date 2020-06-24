@@ -13,6 +13,22 @@ export const createPeerConnection = (
     iceServers: iceConfig
   });
 
+  state.peerConnection.onicegatheringstatechange = event => {
+    console.log("onicegatheringstatechange", event);
+  };
+  state.peerConnection.oniceconnectionstatechange = event => {
+    console.log("oniceconnectionstatechange", event);
+  };
+  state.peerConnection.onicecandidateerror = event => {
+    console.log("onicecandidateerror", event);
+  };
+  state.peerConnection.onconnectionstatechange = event => {
+    console.log("onconnectionstatechange", event);
+  };
+  state.peerConnection.onsignalingstatechange = event => {
+    console.log("onsignalingstatechange", event);
+  };
+
   return state.peerConnection;
 };
 
