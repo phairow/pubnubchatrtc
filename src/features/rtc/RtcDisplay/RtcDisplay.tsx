@@ -157,6 +157,7 @@ const RtcDisplay = () => {
       );
       pubnub.publish({
         channel: currentCall.peerUserId,
+        sendByPost: true,
         message: {
           answer: peerConnection.localDescription
         }
@@ -239,10 +240,16 @@ const RtcDisplay = () => {
         peerConnection.localDescription
       );
 
+      console.log(
+        "negotiation: sending offer",
+        peerConnection.localDescription
+      );
+
       console.log("negotiation: sending local offer to peer");
 
       pubnub.publish({
         channel: currentCall.peerUserId,
+        sendByPost: true,
         message: {
           offer: peerConnection.localDescription
         }
@@ -319,9 +326,12 @@ const RtcDisplay = () => {
     );
     dispatch(callConnected(RtcCallState.INCOMING_CALL_CONNECTED));
 
+    console.log("answer: sending answer", lastCallMessage.sender.id);
+
     dispatch(
       sendPubnubMessage({
         channel: lastCallMessage.sender.id,
+        sendByPost: true,
         message: {
           type: MessageType.Rtc,
           callState: RtcCallState.OUTGOING_CALL_CONNECTED,
@@ -336,9 +346,13 @@ const RtcDisplay = () => {
     const callUser = async () => {
       console.log("calling " + currentCall.peerUserId);
       setDialed(true);
+
+      console.log("calluser: calling", currentCall.peerUserId);
+
       dispatch(
         sendPubnubMessage({
           channel: currentCall.peerUserId,
+          sendByPost: true,
           message: {
             type: MessageType.Rtc,
             callState: RtcCallState.DIALING,
@@ -395,6 +409,7 @@ const RtcDisplay = () => {
 
       pubnub.publish({
         channel: currentCall.peerUserId,
+        sendByPost: true,
         message: {
           offer: peerConnection.localDescription
         }
@@ -471,9 +486,13 @@ const RtcDisplay = () => {
 
   const endCall = () => {
     console.log("end call");
+
+    console.log("end call: sending end", currentCall.peerUserId);
+
     dispatch(
       sendPubnubMessage({
         channel: currentCall.peerUserId,
+        sendByPost: true,
         message: {
           type: MessageType.Rtc,
           callState: dialed
