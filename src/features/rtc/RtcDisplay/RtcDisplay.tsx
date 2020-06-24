@@ -107,11 +107,7 @@ const RtcDisplay = () => {
   pubnubIceListener.message = async message => {
     if (message.message.candidate) {
       // we got an ice candidate from a peer
-      console.log(
-        "candidate received from peer",
-        typeof message.message.candidate,
-        message.message.candidate
-      );
+      console.log("candidate received from peer", message.message.candidate);
       peerConnection.addIceCandidate(
         new RTCIceCandidate(message.message.candidate)
       );
@@ -124,7 +120,8 @@ const RtcDisplay = () => {
         new RTCSessionDescription(message.message.offer)
       );
       const answer = await peerConnection.createAnswer({
-        offerToReceiveVideo: true
+        offerToReceiveVideo: true,
+        offerToReceiveAudio: true
       });
 
       await peerConnection.setLocalDescription(answer);
@@ -154,7 +151,7 @@ const RtcDisplay = () => {
     pubnub.publish({
       channel: currentCall.peerUserId,
       message: {
-        candidate: event.candidate?.toJSON()
+        candidate: event.candidate
       }
     });
   };
@@ -162,25 +159,26 @@ const RtcDisplay = () => {
   peerConnection.ontrack = e => {
     console.log("on track received");
     if (
-      (document.querySelector("#remotevideo") as any).srcObject! ===
-      e.streams[0]
+      (document.querySelector("#remotevideo") as any).srcObject !== e.streams[0]
     ) {
       (document.querySelector("#remotevideo") as any).srcObject = e.streams[0];
     }
   };
 
   peerConnection.onconnectionstatechange = async e => {
-    // add track
-    let stream = await navigator.mediaDevices.getUserMedia({
-      audio,
-      video: true
-    });
+    console.log("onconnectionstatechange", peerConnection.connectionState);
+    if (peerConnection.connectionState === "connected") {
+      // add track
+      let stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video: true
+      });
 
-    console.log("adding tracks");
-    stream.getTracks().forEach(track => {
-      console.log("track added");
-      peerConnection.addTrack(track, stream);
-    });
+      console.log("adding tracks");
+      stream
+        .getTracks()
+        .forEach(track => peerConnection.addTrack(track, stream));
+    }
   };
 
   peerConnection.onnegotiationneeded = async () => {
@@ -199,10 +197,6 @@ const RtcDisplay = () => {
     //     offer: peerConnection.localDescription
     //   }
     // });
-  };
-
-  (peerConnection as any).onaddstream = function(event: any) {
-    (document.querySelector("#remotevideo") as any).srcObject = event.stream;
   };
 
   const disableVideo = () => {
@@ -318,7 +312,8 @@ const RtcDisplay = () => {
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
 
       const offer = await peerConnection.createOffer({
-        offerToReceiveVideo: true
+        offerToReceiveVideo: true,
+        offerToReceiveAudio: true
       });
 
       console.log("attempting local offer", offer);
