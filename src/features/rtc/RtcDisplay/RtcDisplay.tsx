@@ -221,6 +221,14 @@ const RtcDisplay = () => {
           track.stop();
         });
     (document.querySelector("#myvideo") as any).srcObject = undefined;
+
+    (document.querySelector("#remotevideo") as any).srcObject &&
+      (document.querySelector("#remotevideo") as any).srcObject
+        .getTracks()
+        .forEach((track: MediaStreamTrack) => {
+          track.stop();
+        });
+    (document.querySelector("#remotevideo") as any).srcObject = undefined;
     setVideo(false);
   };
 
