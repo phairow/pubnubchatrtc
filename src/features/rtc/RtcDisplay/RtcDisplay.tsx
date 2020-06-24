@@ -181,6 +181,7 @@ const RtcDisplay = () => {
       console.log("candidate sent to peer");
       pubnub.publish({
         channel: currentCall.peerUserId,
+        sendByPost: true,
         message: {
           candidate: event.candidate
         }
