@@ -230,7 +230,7 @@ const RtcDisplay = () => {
     peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
-      if (peerConnection.connectionState !== "connected") {
+      if (peerConnection.connectionState === "failed") {
         const offer = await peerConnection.createOffer({
           offerToReceiveVideo: true,
           offerToReceiveAudio: true
