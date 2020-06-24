@@ -241,6 +241,7 @@ const RtcDisplay = () => {
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
+      // if (state.peerConnection.connectionState !== "connected") {
       const offer = await state.peerConnection.createOffer();
 
       console.log("negotiation: attempting local offer", offer);
@@ -273,6 +274,7 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("error sending offer from negotiation needed", e);
       }
+      // }
     };
   };
 
