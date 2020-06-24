@@ -239,13 +239,10 @@ const RtcDisplay = () => {
       audio: false
     });
 
-    disableAudio();
     (document.querySelector("#myvideo") as any).srcObject = stream;
   };
 
-  const enableAudio = async (mediaConstraints: MediaStreamConstraints) => {
-    disableVideo();
-  };
+  const enableAudio = async (mediaConstraints: MediaStreamConstraints) => {};
 
   const updateMedia = (mediaConstraints: MediaStreamConstraints) => {
     if (mediaConstraints.video) {
