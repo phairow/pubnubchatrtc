@@ -38,7 +38,8 @@ const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 const state: any = {
   peerConnection: undefined,
   pendingIceCandidates: [],
-  offerPart1: undefined
+  offerPart1: "",
+  answerPart1: ""
 };
 
 export const getLastCallMessage = createSelector(
@@ -136,7 +137,7 @@ const RtcDisplay = () => {
         type: "offer",
         sdp: state.offerPart1 + message.message.offer2
       };
-      message.message.offer1 = "";
+      state.offerPart1 = "";
 
       console.log("offer received from peer", offer);
       try {
@@ -173,31 +174,26 @@ const RtcDisplay = () => {
       });
       state.pendingIceCandidates.slice(0, state.pendingIceCandidates.length);
 
-      console.log(
-        "answer: sending answer ",
-        state.peerConnection.localDescription
-      );
-
-      // send answer
-      console.log(
-        "offer: answer sent to peer",
-        state.peerConnection.localDescription
-      );
-      pubnub.publish({
-        channel: currentCall.peerUserId,
-        sendByPost: true,
-        message: {
-          answer: state.peerConnection.localDescription
-        }
-      });
+      sendAnswer();
     }
 
-    if (message.message.answer && message.message.answer.type === "answer") {
+    if (message.message.answer1) {
+      state.answerPart1 = message.message.answer1;
+    }
+
+    if (message.message.answer2) {
       // we got an ice answer from a peer
       console.log("answer: answer received from peer", message.message.answer);
 
+      const answer = {
+        type: "answer",
+        sdp: state.answerPart1 + message.message.answer2
+      };
+
+      state.answerPart1 = "";
+
       try {
-        await state.peerConnection.setRemoteDescription(message.message.answer);
+        await state.peerConnection.setRemoteDescription(answer);
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
@@ -310,6 +306,41 @@ const RtcDisplay = () => {
             sendByPost: true,
             message: {
               offer2: part2
+            }
+          });
+        });
+    }
+  };
+
+  const sendAnswer = () => {
+    console.log(
+      "sendAnswer: sending answer",
+      state.peerConnection.localDescription
+    );
+
+    const sdp = state.peerConnection.localDescription?.sdp;
+    console.log("sendAnswer: answer length", sdp && sdp.length);
+    console.log("sendAnswer: sending local answer to peer", sdp);
+
+    if (sdp) {
+      const halfLength = Math.floor(sdp.length / 2);
+      const part1 = sdp.slice(0, halfLength);
+      const part2 = sdp.slice(halfLength);
+
+      pubnub
+        .publish({
+          channel: currentCall.peerUserId,
+          sendByPost: true,
+          message: {
+            answer1: part1
+          }
+        })
+        .then(() => {
+          pubnub.publish({
+            channel: currentCall.peerUserId,
+            sendByPost: true,
+            message: {
+              answer2: part2
             }
           });
         });
