@@ -415,6 +415,7 @@ const RtcDisplay = () => {
     setAnswered(false);
     setPeerAnswered(false);
     setVideo(true);
+    setAudio(true);
   };
 
   const endCall = () => {
