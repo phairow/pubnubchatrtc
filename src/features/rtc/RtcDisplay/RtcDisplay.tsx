@@ -168,10 +168,11 @@ const RtcDisplay = () => {
   peerConnection.onconnectionstatechange = async e => {
     console.log("onconnectionstatechange", peerConnection.connectionState);
     if (peerConnection.connectionState === "connected") {
+      console.log("connected");
       // add track
       let stream = await navigator.mediaDevices.getUserMedia({
         audio,
-        video: true
+        video
       });
 
       console.log("adding tracks");
@@ -183,20 +184,21 @@ const RtcDisplay = () => {
 
   peerConnection.onnegotiationneeded = async () => {
     console.log("on negotiation needed");
-    // const offer = await peerConnection.createOffer({
-    //   offerToReceiveVideo: true
-    // });
+    const offer = await peerConnection.createOffer({
+      offerToReceiveVideo: true,
+      offerToReceiveAudio: true
+    });
 
-    // console.log("attempting local offer", offer);
-    // await peerConnection.setLocalDescription(offer);
+    console.log("attempting local offer", offer);
+    await peerConnection.setLocalDescription(offer);
 
-    // console.log("sending local offer to peer");
-    // pubnub.publish({
-    //   channel: currentCall.peerUserId,
-    //   message: {
-    //     offer: peerConnection.localDescription
-    //   }
-    // });
+    console.log("sending local offer to peer");
+    pubnub.publish({
+      channel: currentCall.peerUserId,
+      message: {
+        offer: peerConnection.localDescription
+      }
+    });
   };
 
   const disableVideo = () => {
@@ -227,7 +229,10 @@ const RtcDisplay = () => {
   };
 
   const enableVideo = async (mediaConstraints: MediaStreamConstraints) => {
-    let stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    let stream = await navigator.mediaDevices.getUserMedia({
+      ...mediaConstraints,
+      audio: false
+    });
 
     disableAudio();
     (document.querySelector("#myvideo") as any).srcObject = stream;
