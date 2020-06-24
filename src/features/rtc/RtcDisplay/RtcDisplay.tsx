@@ -134,17 +134,6 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video
-      });
-
-      console.log("offer: adding tracks");
-
-      stream
-        .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
-
       const answer = await peerConnection.createAnswer({
         offerToReceiveVideo: true,
         offerToReceiveAudio: true
@@ -186,17 +175,6 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video
-      });
-
-      console.log("negotiation: adding tracks");
-
-      stream
-        .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
     }
   };
 
@@ -236,6 +214,19 @@ const RtcDisplay = () => {
 
     peerConnection.onconnectionstatechange = async e => {
       console.log("onconnectionstatechange", peerConnection.connectionState);
+
+      if (peerConnection.connectionState === "connected") {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio,
+          video
+        });
+
+        console.log("connected: adding tracks");
+
+        stream
+          .getTracks()
+          .forEach(track => peerConnection.addTrack(track, stream));
+      }
     };
 
     peerConnection.onnegotiationneeded = async () => {
@@ -256,17 +247,6 @@ const RtcDisplay = () => {
         } catch (e) {
           console.log("negotiation: error setting local desc: ", e);
         }
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio,
-          video
-        });
-
-        console.log("negotiation: adding tracks");
-
-        stream
-          .getTracks()
-          .forEach(track => peerConnection.addTrack(track, stream));
 
         console.log(
           "negotiation: offer length",
@@ -424,17 +404,6 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("accepted: error setting local desc: ", e);
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video
-      });
-
-      console.log("accepted: adding tracks");
-
-      stream
-        .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
 
       console.log(
         "accepted: offer length",
