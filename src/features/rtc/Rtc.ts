@@ -10,6 +10,8 @@ export const createPeerConnection = (
   iceConfig: RTCIceServer[]
 ): RTCPeerConnection => {
   state.peerConnection = new RTCPeerConnection({
+    bundlePolicy: "max-compat",
+    rtcpMuxPolicy: "negotiate",
     iceServers: iceConfig
   });
 
