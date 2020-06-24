@@ -252,8 +252,8 @@ const RtcDisplay = () => {
         .forEach(track => peerConnection.addTrack(track, stream));
 
       console.log(
-        "negotiation: sending offer ",
-        peerConnection.localDescription
+        "negotiation: offer length",
+        peerConnection.localDescription?.toJSON().length
       );
 
       console.log(
@@ -418,6 +418,11 @@ const RtcDisplay = () => {
       stream
         .getTracks()
         .forEach(track => peerConnection.addTrack(track, stream));
+
+      console.log(
+        "accepted: offer length",
+        peerConnection.localDescription?.toJSON().length
+      );
 
       console.log("accepted: sending offer ", peerConnection.localDescription);
 
