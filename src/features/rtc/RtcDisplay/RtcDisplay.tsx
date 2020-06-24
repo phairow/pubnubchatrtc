@@ -125,6 +125,16 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video
+      });
+
+      console.log("offer: adding tracks");
+      stream
+        .getTracks()
+        .forEach(track => peerConnection.addTrack(track, stream));
+
       const answer = await peerConnection.createAnswer({
         offerToReceiveVideo: true,
         offerToReceiveAudio: true
@@ -136,20 +146,10 @@ const RtcDisplay = () => {
         console.log("offer: error setting local desc: ", e);
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video
-      });
-
-      console.log("offer: adding tracks");
-      stream
-        .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
-
       // send answer
       console.log(
         "offer: answer sent to peer",
-        peerConnection.remoteDescription
+        peerConnection.localDescription
       );
       pubnub.publish({
         channel: currentCall.peerUserId,
@@ -168,16 +168,6 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video
-      });
-
-      console.log("answer: adding tracks");
-      stream
-        .getTracks()
-        .forEach(track => peerConnection.addTrack(track, stream));
     }
   };
 
