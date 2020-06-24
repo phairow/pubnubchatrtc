@@ -358,6 +358,7 @@ const RtcDisplay = () => {
       dispatch(callCompleted(callState, endTime));
       closeMedia();
       peerConnection && peerConnection.close();
+      peerConnection = new RTCPeerConnection();
     };
 
     // console.log('---');
