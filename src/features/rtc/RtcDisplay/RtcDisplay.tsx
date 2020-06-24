@@ -103,8 +103,6 @@ const RtcDisplay = () => {
     if (message.message.offer && message.message.offer.type === "offer") {
       // we got an ice offer from a peer
 
-      initPeerConnection();
-
       console.log("offer received from peer", message.message.offer);
       try {
         await peerConnection.setRemoteDescription(message.message.offer);
@@ -281,6 +279,8 @@ const RtcDisplay = () => {
       callAccepted(lastCallMessage.sender.id, lastCallMessage.startTime)
     );
     dispatch(callConnected(RtcCallState.INCOMING_CALL_CONNECTED));
+
+    initPeerConnection();
 
     dispatch(
       sendPubnubMessage({
