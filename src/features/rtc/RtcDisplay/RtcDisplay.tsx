@@ -91,7 +91,13 @@ const RtcDisplay = () => {
   pubnub.addListener(pubnubIceListener);
 
   pubnubIceListener.message = async message => {
-    if (message.message.candidate && message.message.candidate.candidate) {
+    if (message.message.candidate === null) {
+      // add last candidate
+      await peerConnection.addIceCandidate({ candidate: "" });
+    } else if (
+      message.message.candidate &&
+      message.message.candidate.candidate
+    ) {
       // we got an ice candidate from a peer
       console.log("candidate received from peer", message.message.candidate);
 
@@ -183,7 +189,7 @@ const RtcDisplay = () => {
     peerConnection.onicecandidate = event => {
       console.log("candidate sent to peer");
 
-      console.log("candidate: sending candidate ", event.candidate);
+      console.log("candidate: sending candidate ", event);
 
       pubnub.publish({
         channel: currentCall.peerUserId,
