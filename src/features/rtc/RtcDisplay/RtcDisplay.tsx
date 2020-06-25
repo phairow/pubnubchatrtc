@@ -341,7 +341,6 @@ const RtcDisplay = () => {
   const answerCall = () => {
     console.log("answer call");
     setAnswered(true);
-    updateMedia({ audio, video });
 
     dispatch(
       callAccepted(lastCallMessage.sender.id, lastCallMessage.startTime)
@@ -366,10 +365,11 @@ const RtcDisplay = () => {
   };
 
   useEffect(() => {
+    updateMedia({ audio, video });
+
     const callUser = async () => {
       console.log("calling " + currentCall.peerUserId);
       setDialed(true);
-      updateMedia({ audio, video });
 
       console.log("calluser: calling", currentCall.peerUserId);
 
@@ -397,7 +397,6 @@ const RtcDisplay = () => {
     const outgoingCallAccepted = async () => {
       console.log("accepted: outgoing call accepted");
       setPeerAnswered(true);
-      updateMedia({ audio, video });
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
 
       initPeerConnection();
