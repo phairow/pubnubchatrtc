@@ -140,6 +140,8 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
+      connectMedia();
+
       const answer = await state.peerConnection.createAnswer();
 
       try {
@@ -177,6 +179,19 @@ const RtcDisplay = () => {
         console.log("answer: error setting remote desc: ", e);
       }
     }
+  };
+
+  const connectMedia = () => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio,
+      video
+    });
+
+    console.log("connect media: adding tracks");
+
+    stream
+      .getTracks()
+      .forEach(track => state.peerConnection.addTrack(track, stream));
   };
 
   const initPeerConnection = async () => {
@@ -233,10 +248,7 @@ const RtcDisplay = () => {
 
       if (dialed) {
         // if (state.peerConnection.connectionState !== "connected") {
-        const offer = await state.peerConnection.createOffer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: true
-        });
+        const offer = await state.peerConnection.createOffer();
 
         console.log("negotiation: attempting local offer", offer);
 
@@ -389,10 +401,9 @@ const RtcDisplay = () => {
 
       initPeerConnection();
 
-      const offer = await state.peerConnection.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      });
+      connectMedia();
+
+      const offer = await state.peerConnection.createOffer();
 
       console.log("accepted: attempting local offer", offer);
 
