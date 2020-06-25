@@ -140,10 +140,7 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      const answer = await state.peerConnection.createAnswer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      });
+      const answer = await state.peerConnection.createAnswer();
 
       try {
         await state.peerConnection.setLocalDescription(answer);
@@ -186,16 +183,18 @@ const RtcDisplay = () => {
     state.peerConnection = createPeerConnection(ICE_CONFIG);
     state.inboundStream = undefined;
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio,
-      video
-    });
+    if (dialed) {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video
+      });
 
-    console.log("connect media: adding tracks");
+      console.log("connect media: adding tracks");
 
-    stream
-      .getTracks()
-      .forEach(track => state.peerConnection.addTrack(track, stream));
+      stream
+        .getTracks()
+        .forEach(track => state.peerConnection.addTrack(track, stream));
+    }
 
     // send ice candidates to peer
     state.peerConnection.onicecandidate = async event => {
