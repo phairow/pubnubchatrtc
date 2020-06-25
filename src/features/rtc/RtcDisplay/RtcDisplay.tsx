@@ -350,17 +350,6 @@ const RtcDisplay = () => {
     );
 
     initPeerConnection();
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio,
-      video
-    });
-
-    console.log("connect media: adding tracks");
-
-    stream
-      .getTracks()
-      .forEach(track => state.peerConnection.addTrack(track, stream));
   };
 
   useEffect(() => {
