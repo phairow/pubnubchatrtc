@@ -246,10 +246,7 @@ const RtcDisplay = () => {
       console.log("negotiation: on negotiation needed");
 
       // if (state.peerConnection.connectionState !== "connected") {
-      const offer = await state.peerConnection.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      });
+      const offer = await state.peerConnection.createOffer();
 
       console.log("negotiation: attempting local offer", offer);
 
@@ -401,10 +398,7 @@ const RtcDisplay = () => {
 
       initPeerConnection();
 
-      const offer = await state.peerConnection.createOffer({
-        offerToReceiveVideo: true,
-        offerToReceiveAudio: true
-      });
+      const offer = await state.peerConnection.createOffer();
 
       console.log("accepted: attempting local offer", offer);
 
