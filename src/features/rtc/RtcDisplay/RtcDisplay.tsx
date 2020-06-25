@@ -183,7 +183,7 @@ const RtcDisplay = () => {
     state.peerConnection = createPeerConnection(ICE_CONFIG);
     state.inboundStream = undefined;
 
-    if (dialed) {
+    if (!dialed) {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio,
         video
