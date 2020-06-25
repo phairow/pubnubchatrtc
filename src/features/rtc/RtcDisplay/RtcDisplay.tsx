@@ -369,6 +369,7 @@ const RtcDisplay = () => {
     const callUser = async () => {
       console.log("calling " + currentCall.peerUserId);
       setDialed(true);
+      updateMedia({ audio, video });
 
       console.log("calluser: calling", currentCall.peerUserId);
 
