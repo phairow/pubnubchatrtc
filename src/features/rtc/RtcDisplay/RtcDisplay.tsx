@@ -140,7 +140,7 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      connectMedia();
+      await connectMedia();
 
       const answer = await state.peerConnection.createAnswer();
 
@@ -181,7 +181,7 @@ const RtcDisplay = () => {
     }
   };
 
-  const connectMedia = () => {
+  const connectMedia = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio,
       video
@@ -401,7 +401,7 @@ const RtcDisplay = () => {
 
       initPeerConnection();
 
-      connectMedia();
+      await connectMedia();
 
       const offer = await state.peerConnection.createOffer();
 
