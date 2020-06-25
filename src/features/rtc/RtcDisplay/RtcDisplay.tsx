@@ -140,10 +140,7 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      const answer = await state.peerConnection.createAnswer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      });
+      const answer = await state.peerConnection.createAnswer();
 
       try {
         await state.peerConnection.setLocalDescription(answer);
@@ -236,7 +233,10 @@ const RtcDisplay = () => {
 
       if (dialed) {
         // if (state.peerConnection.connectionState !== "connected") {
-        const offer = await state.peerConnection.createOffer();
+        const offer = await state.peerConnection.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true
+        });
 
         console.log("negotiation: attempting local offer", offer);
 
@@ -326,7 +326,7 @@ const RtcDisplay = () => {
     setAudio(!audio);
   };
 
-  const answerCall = () => {
+  const answerCall = async () => {
     console.log("answer call");
     setAnswered(true);
 
@@ -350,6 +350,17 @@ const RtcDisplay = () => {
     );
 
     initPeerConnection();
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio,
+      video
+    });
+
+    console.log("connect media: adding tracks");
+
+    stream
+      .getTracks()
+      .forEach(track => state.peerConnection.addTrack(track, stream));
   };
 
   useEffect(() => {
@@ -389,7 +400,10 @@ const RtcDisplay = () => {
 
       initPeerConnection();
 
-      const offer = await state.peerConnection.createOffer();
+      const offer = await state.peerConnection.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
 
       console.log("accepted: attempting local offer", offer);
 
@@ -425,8 +439,6 @@ const RtcDisplay = () => {
       dispatch(callCompleted(callState, endTime));
       closeMedia();
       state.peerConnection && state.peerConnection.close();
-      // peerConnection = new RTCPeerConnection();
-      // state.peerConnection.close(); /// leave with emp
     };
 
     // console.log('---');
