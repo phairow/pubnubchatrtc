@@ -140,7 +140,10 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      const answer = await state.peerConnection.createAnswer();
+      const answer = await state.peerConnection.createAnswer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
 
       try {
         await state.peerConnection.setLocalDescription(answer);
@@ -182,19 +185,6 @@ const RtcDisplay = () => {
   const initPeerConnection = async () => {
     state.peerConnection = createPeerConnection(ICE_CONFIG);
     state.inboundStream = undefined;
-
-    if (!dialed) {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio,
-        video
-      });
-
-      console.log("connect media: adding tracks");
-
-      stream
-        .getTracks()
-        .forEach(track => state.peerConnection.addTrack(track, stream));
-    }
 
     // send ice candidates to peer
     state.peerConnection.onicecandidate = async event => {
@@ -244,33 +234,35 @@ const RtcDisplay = () => {
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
-      // if (state.peerConnection.connectionState !== "connected") {
-      const offer = await state.peerConnection.createOffer();
+      if (dialed) {
+        // if (state.peerConnection.connectionState !== "connected") {
+        const offer = await state.peerConnection.createOffer();
 
-      console.log("negotiation: attempting local offer", offer);
+        console.log("negotiation: attempting local offer", offer);
 
-      try {
-        await state.peerConnection.setLocalDescription(offer);
-      } catch (e) {
-        console.log("negotiation: error setting local desc: ", e);
-      }
+        try {
+          await state.peerConnection.setLocalDescription(offer);
+        } catch (e) {
+          console.log("negotiation: error setting local desc: ", e);
+        }
 
-      console.log(
-        "negotiation: sending offer",
-        state.peerConnection.localDescription
-      );
+        console.log(
+          "negotiation: sending offer",
+          state.peerConnection.localDescription
+        );
 
-      console.log("negotiation: sending local offer to peer");
+        console.log("negotiation: sending local offer to peer");
 
-      try {
-        await pubnub.publish({
-          channel: currentCall.peerUserId,
-          message: {
-            offer: state.peerConnection.localDescription
-          }
-        });
-      } catch (e) {
-        console.log("error sending offer from negotiation needed", e);
+        try {
+          await pubnub.publish({
+            channel: currentCall.peerUserId,
+            message: {
+              offer: state.peerConnection.localDescription
+            }
+          });
+        } catch (e) {
+          console.log("error sending offer from negotiation needed", e);
+        }
       }
     };
   };
