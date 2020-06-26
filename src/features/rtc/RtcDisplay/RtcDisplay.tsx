@@ -184,23 +184,21 @@ const RtcDisplay = () => {
     state.inboundStream = undefined;
 
     // send ice candidates to peer
-    state.peerConnection.onicecandidate = async event => {
+    state.peerConnection.onicecandidate = async e => {
       if (e.candidate) {
         console.log("candidate sent to peer");
 
-        console.log("candidate: sending candidate ", event);
+        console.log("candidate: sending candidate ", e);
         console.log(
           "candidate: ice candidate length ",
-          event.candidate &&
-            event.candidate.candidate &&
-            event.candidate.candidate.length
+          e.candidate && e.candidate.candidate && e.candidate.candidate.length
         );
 
         try {
           await pubnub.publish({
             channel: currentCall.peerUserId,
             message: {
-              candidate: event.candidate
+              candidate: e.candidate
             }
           });
         } catch (e) {
