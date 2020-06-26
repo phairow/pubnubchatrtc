@@ -140,7 +140,7 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      // await connectMedia();
+      await connectMedia();
 
       const answer = await state.peerConnection.createAnswer();
 
