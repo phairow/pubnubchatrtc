@@ -138,6 +138,7 @@ const RtcDisplay = () => {
       }
 
       await connectMedia();
+      await updateMedia({ audio, video });
 
       const answer = await state.peerConnection.createAnswer();
 
@@ -164,6 +165,14 @@ const RtcDisplay = () => {
       // we got an ice answer from a peer
       console.log("answer: answer received from peer", message.message.answer);
 
+      if (
+        state.negotingOffer ||
+        state.peerConnection.signalingState !== "stable"
+      ) {
+        // exit if already negotiating offer or unstable
+        return;
+      }
+
       try {
         await state.peerConnection.setRemoteDescription(message.message.answer);
       } catch (e) {
@@ -174,9 +183,10 @@ const RtcDisplay = () => {
 
   const connectMedia = async () => {
     if (!state.userMediaStream) {
+      setVideo(true);
       state.userMediaStream = await navigator.mediaDevices.getUserMedia({
         audio,
-        video
+        video: true
       });
 
       console.log("connect media: adding tracks");
@@ -188,7 +198,7 @@ const RtcDisplay = () => {
       });
     }
 
-    return state.userMediaStream.clone();
+    return state?.userMediaStream.clone();
   };
 
   const initPeerConnection = async () => {
@@ -243,44 +253,43 @@ const RtcDisplay = () => {
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
-      if (!dialed) {
+      try {
+        state.negotingOffer = true;
+
+        await connectMedia();
+        await updateMedia({ audio, video });
+
+        const offer = await state.peerConnection.createOffer();
+
+        console.log("negotiation: attempting local offer", offer);
+
         try {
-          state.negotingOffer = true;
-
-          await connectMedia();
-
-          const offer = await state.peerConnection.createOffer();
-
-          console.log("negotiation: attempting local offer", offer);
-
-          try {
-            await state.peerConnection.setLocalDescription(offer);
-          } catch (e) {
-            console.log("negotiation: error setting local desc: ", e);
-          }
-
-          console.log(
-            "negotiation: sending offer",
-            state.peerConnection.localDescription
-          );
-
-          console.log("negotiation: sending local offer to peer");
-
-          try {
-            await pubnub.publish({
-              channel: currentCall.peerUserId,
-              message: {
-                offer: state.peerConnection.localDescription
-              }
-            });
-          } catch (e) {
-            console.log("error sending offer from negotiation needed", e);
-          }
+          await state.peerConnection.setLocalDescription(offer);
         } catch (e) {
-          console.log("error in negotiation needed", e);
-        } finally {
-          state.negotingOffer = false;
+          console.log("negotiation: error setting local desc: ", e);
         }
+
+        console.log(
+          "negotiation: sending offer",
+          state.peerConnection.localDescription
+        );
+
+        console.log("negotiation: sending local offer to peer");
+
+        try {
+          await pubnub.publish({
+            channel: currentCall.peerUserId,
+            message: {
+              offer: state.peerConnection.localDescription
+            }
+          });
+        } catch (e) {
+          console.log("error sending offer from negotiation needed", e);
+        }
+      } catch (e) {
+        console.log("error in negotiation needed", e);
+      } finally {
+        state.negotingOffer = false;
       }
     };
   };
@@ -314,10 +323,7 @@ const RtcDisplay = () => {
   };
 
   const enableVideo = async (mediaConstraints: MediaStreamConstraints) => {
-    let stream = await navigator.mediaDevices.getUserMedia({
-      ...mediaConstraints,
-      audio: false
-    });
+    let stream = await connectMedia();
 
     (document.querySelector("#myvideo") as any).srcObject = stream;
   };
@@ -376,6 +382,7 @@ const RtcDisplay = () => {
     const callUser = async () => {
       console.log("calling " + currentCall.peerUserId);
 
+      await connectMedia();
       await updateMedia({ audio, video });
 
       setDialed(true);
@@ -499,7 +506,6 @@ const RtcDisplay = () => {
   });
 
   const closeMedia = () => {
-    disableMedia();
     dispatch(rtcViewHidden());
     setDialed(false);
     setAnswered(false);
@@ -512,6 +518,7 @@ const RtcDisplay = () => {
       state.userMediaStream.getTracks()[0].stop();
       state.userMediaStream = undefined;
     }
+    disableMedia();
   };
 
   const endCall = () => {
