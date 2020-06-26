@@ -36,14 +36,14 @@ const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 
 interface LocalState {
   peerConnection: RTCPeerConnection;
-  pendingIceCandidates: any[];
   inboundStream: any;
+  negotingOffer: boolean;
 }
 
 const state: LocalState = {
   peerConnection: new RTCPeerConnection(),
-  pendingIceCandidates: [],
-  inboundStream: undefined
+  inboundStream: undefined,
+  negotingOffer: false
 };
 
 // TODO: figure out how to handle peer connections in a clean way
@@ -100,77 +100,58 @@ const RtcDisplay = () => {
   pubnub.addListener(pubnubIceListener);
 
   pubnubIceListener.message = async message => {
-    if (message.message.candidate === null) {
-      // add last candidate
-      await state.peerConnection.addIceCandidate({
-        candidate: "",
-        sdpMid: "0",
-        sdpMLineIndex: 0
-      });
-    } else if (
-      message.message.candidate &&
-      message.message.candidate.candidate
+    if (
+      state.peerConnection &&
+      state.peerConnection.connectionState !== "closed" &&
+      message.message.candidate
     ) {
       // we got an ice candidate from a peer
       console.log("candidate received from peer", message.message.candidate);
 
-      if (
-        state.peerConnection &&
-        state.peerConnection.connectionState !== "closed"
-      ) {
-        try {
-          // let iceCandidate = new RTCIceCandidate(message.message.candidate);
-          await state.peerConnection.addIceCandidate(message.message.candidate);
-        } catch (e) {
-          console.log("condidate: error setting ice candidate: ", e);
-        }
-      } else {
-        // some ice candidates are sent before the offer is answered
-        state.pendingIceCandidates.push(message.message.candidate);
+      try {
+        // let iceCandidate = new RTCIceCandidate(message.message.candidate);
+        await state.peerConnection.addIceCandidate(message.message.candidate);
+      } catch (e) {
+        console.log("condidate: error setting ice candidate: ", e);
       }
     }
 
-    if (message.message.offer && message.message.offer.type === "offer") {
+    if (
+      message.message.offer &&
+      message.message.offer.type === "offer" &&
+      (state.negotingOffer || state.peerConnection.signalingState !== "stable")
+    ) {
       // we got an ice offer from a peer
 
       console.log("offer received from peer", message.message.offer);
+
       try {
         await state.peerConnection.setRemoteDescription(message.message.offer);
       } catch (e) {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      if (!answered) {
-        setAnswered(true);
+      await connectMedia();
 
-        await connectMedia();
+      const answer = await state.peerConnection.createAnswer();
 
-        const answer = await state.peerConnection.createAnswer();
-
-        try {
-          await state.peerConnection.setLocalDescription(answer);
-        } catch (e) {
-          console.log("offer: error setting local desc: ", e);
-        }
-
-        // apply pending ice candidates
-        state.pendingIceCandidates.forEach(candidate => {
-          state.peerConnection.addIceCandidate(candidate);
-        });
-        state.pendingIceCandidates.slice(0, state.pendingIceCandidates.length);
-
-        console.log(
-          "offer: sending answer ",
-          state.peerConnection.localDescription
-        );
-
-        pubnub.publish({
-          channel: currentCall.peerUserId,
-          message: {
-            answer: state.peerConnection.localDescription
-          }
-        });
+      try {
+        await state.peerConnection.setLocalDescription(answer);
+      } catch (e) {
+        console.log("offer: error setting local desc: ", e);
       }
+
+      console.log(
+        "offer: sending answer ",
+        state.peerConnection.localDescription
+      );
+
+      pubnub.publish({
+        channel: currentCall.peerUserId,
+        message: {
+          answer: state.peerConnection.localDescription
+        }
+      });
     }
 
     if (message.message.answer && message.message.answer.type === "answer") {
@@ -204,25 +185,27 @@ const RtcDisplay = () => {
 
     // send ice candidates to peer
     state.peerConnection.onicecandidate = async event => {
-      console.log("candidate sent to peer");
+      if (e.candidate) {
+        console.log("candidate sent to peer");
 
-      console.log("candidate: sending candidate ", event);
-      console.log(
-        "candidate: ice candidate length ",
-        event.candidate &&
-          event.candidate.candidate &&
-          event.candidate.candidate.length
-      );
+        console.log("candidate: sending candidate ", event);
+        console.log(
+          "candidate: ice candidate length ",
+          event.candidate &&
+            event.candidate.candidate &&
+            event.candidate.candidate.length
+        );
 
-      try {
-        await pubnub.publish({
-          channel: currentCall.peerUserId,
-          message: {
-            candidate: event.candidate
-          }
-        });
-      } catch (e) {
-        console.log("error sending ice candidate to peer", e);
+        try {
+          await pubnub.publish({
+            channel: currentCall.peerUserId,
+            message: {
+              candidate: event.candidate
+            }
+          });
+        } catch (e) {
+          console.log("error sending ice candidate to peer", e);
+        }
       }
     };
 
@@ -250,34 +233,42 @@ const RtcDisplay = () => {
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
-      await connectMedia();
-
-      const offer = await state.peerConnection.createOffer();
-
-      console.log("negotiation: attempting local offer", offer);
-
       try {
-        await state.peerConnection.setLocalDescription(offer);
+        state.negotingOffer = true;
+
+        await connectMedia();
+
+        const offer = await state.peerConnection.createOffer();
+
+        console.log("negotiation: attempting local offer", offer);
+
+        try {
+          await state.peerConnection.setLocalDescription(offer);
+        } catch (e) {
+          console.log("negotiation: error setting local desc: ", e);
+        }
+
+        console.log(
+          "negotiation: sending offer",
+          state.peerConnection.localDescription
+        );
+
+        console.log("negotiation: sending local offer to peer");
+
+        try {
+          await pubnub.publish({
+            channel: currentCall.peerUserId,
+            message: {
+              offer: state.peerConnection.localDescription
+            }
+          });
+        } catch (e) {
+          console.log("error sending offer from negotiation needed", e);
+        }
       } catch (e) {
-        console.log("negotiation: error setting local desc: ", e);
-      }
-
-      console.log(
-        "negotiation: sending offer",
-        state.peerConnection.localDescription
-      );
-
-      console.log("negotiation: sending local offer to peer");
-
-      try {
-        await pubnub.publish({
-          channel: currentCall.peerUserId,
-          message: {
-            offer: state.peerConnection.localDescription
-          }
-        });
-      } catch (e) {
-        console.log("error sending offer from negotiation needed", e);
+        console.log("error in negotiation needed", e);
+      } finally {
+        state.negotingOffer = false;
       }
     };
   };
@@ -500,6 +491,8 @@ const RtcDisplay = () => {
     setPeerAnswered(false);
     setVideo(true);
     setAudio(false);
+    state.inboundStream = undefined;
+    state.negotingOffer = false;
   };
 
   const endCall = () => {
