@@ -178,6 +178,8 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
+
+      await connectMedia();
     }
   };
 
@@ -346,7 +348,10 @@ const RtcDisplay = () => {
     dispatch(
       callAccepted(lastCallMessage.sender.id, lastCallMessage.startTime)
     );
+
     dispatch(callConnected(RtcCallState.INCOMING_CALL_CONNECTED));
+
+    await initPeerConnection();
 
     console.log("answer: sending answer", lastCallMessage.sender.id);
 
@@ -361,8 +366,6 @@ const RtcDisplay = () => {
         }
       })
     );
-
-    initPeerConnection();
   };
 
   useEffect(() => {
@@ -401,8 +404,6 @@ const RtcDisplay = () => {
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
 
       initPeerConnection();
-
-      await connectMedia();
 
       const offer = await state.peerConnection.createOffer();
 
