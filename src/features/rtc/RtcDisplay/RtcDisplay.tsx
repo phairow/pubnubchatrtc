@@ -508,7 +508,10 @@ const RtcDisplay = () => {
     setAudio(false);
     state.inboundStream = undefined;
     state.negotingOffer = false;
-    state.userMediaStream = undefined;
+    if (state.userMediaStream) {
+      state.userMediaStream.getTracks()[0].stop();
+      state.userMediaStream = undefined;
+    }
   };
 
   const endCall = () => {
@@ -563,13 +566,22 @@ const RtcDisplay = () => {
     );
   };
 
+  const closeCall = () => {
+    if (currentCall.callState === RtcCallState.DIALING) {
+      dispatch(
+        callCompleted(RtcCallState.CALL_NOT_ANSWERED, new Date().getTime())
+      );
+    }
+    closeMedia();
+  };
+
   return (
     <Wrapper displayed={views.Rtc}>
       <Header>
         <Title>Call</Title>
         <CloseButton
           onClick={() => {
-            closeMedia();
+            closeCall();
           }}
         >
           <CrossIcon color={theme.colors.normalText} title="close" />
