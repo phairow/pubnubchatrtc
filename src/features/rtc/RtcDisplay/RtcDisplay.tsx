@@ -235,7 +235,7 @@ const RtcDisplay = () => {
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
-      if (dialed) {
+      if (!dialed) {
         try {
           state.negotingOffer = true;
 
