@@ -142,31 +142,34 @@ const RtcDisplay = () => {
 
       await connectMedia();
 
-      const answer = await state.peerConnection.createAnswer();
+      if (!answered) {
+        setAnswered(true);
+        const answer = await state.peerConnection.createAnswer();
 
-      try {
-        await state.peerConnection.setLocalDescription(answer);
-      } catch (e) {
-        console.log("offer: error setting local desc: ", e);
-      }
-
-      // apply pending ice candidates
-      state.pendingIceCandidates.forEach(candidate => {
-        state.peerConnection.addIceCandidate(candidate);
-      });
-      state.pendingIceCandidates.slice(0, state.pendingIceCandidates.length);
-
-      console.log(
-        "offer: sending answer ",
-        state.peerConnection.localDescription
-      );
-
-      pubnub.publish({
-        channel: currentCall.peerUserId,
-        message: {
-          answer: state.peerConnection.localDescription
+        try {
+          await state.peerConnection.setLocalDescription(answer);
+        } catch (e) {
+          console.log("offer: error setting local desc: ", e);
         }
-      });
+
+        // apply pending ice candidates
+        state.pendingIceCandidates.forEach(candidate => {
+          state.peerConnection.addIceCandidate(candidate);
+        });
+        state.pendingIceCandidates.slice(0, state.pendingIceCandidates.length);
+
+        console.log(
+          "offer: sending answer ",
+          state.peerConnection.localDescription
+        );
+
+        pubnub.publish({
+          channel: currentCall.peerUserId,
+          message: {
+            answer: state.peerConnection.localDescription
+          }
+        });
+      }
     }
 
     if (message.message.answer && message.message.answer.type === "answer") {
@@ -339,7 +342,6 @@ const RtcDisplay = () => {
 
   const answerCall = async () => {
     console.log("answer call");
-    setAnswered(true);
 
     dispatch(
       callAccepted(lastCallMessage.sender.id, lastCallMessage.startTime)
