@@ -27,7 +27,7 @@ import { createSelector } from "reselect";
 import { getLoggedInUserId } from "../../authentication/authenticationModel";
 import { callConnected } from "../RtcModel";
 import RtcSettings from "config/rtcSettings.json";
-import { createPeerConnection } from "../Rtc";
+import { createPeerConnection, getUserMedia } from "../Rtc";
 import { usePubNub } from "pubnub-react";
 import Pubnub from "pubnub";
 
@@ -38,12 +38,14 @@ interface LocalState {
   peerConnection: RTCPeerConnection;
   inboundStream: any;
   negotingOffer: boolean;
+  userMediaStream?: MediaStream;
 }
 
 const state: LocalState = {
   peerConnection: new RTCPeerConnection(),
   inboundStream: undefined,
-  negotingOffer: false
+  negotingOffer: false,
+  userMediaStream: undefined
 };
 
 // TODO: figure out how to handle peer connections in a clean way
@@ -171,16 +173,22 @@ const RtcDisplay = () => {
   };
 
   const connectMedia = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio,
-      video
-    });
+    if (!state.userMediaStream) {
+      state.userMediaStream = await navigator.mediaDevices.getUserMedia({
+        audio,
+        video
+      });
 
-    console.log("connect media: adding tracks");
+      console.log("connect media: adding tracks");
 
-    stream
-      .getTracks()
-      .forEach(track => state.peerConnection.addTrack(track, stream));
+      state.userMediaStream.getTracks().forEach(track => {
+        if (state.userMediaStream) {
+          state.peerConnection.addTrack(track, state.userMediaStream);
+        }
+      });
+    }
+
+    return state.userMediaStream.clone();
   };
 
   const initPeerConnection = async () => {
@@ -500,6 +508,7 @@ const RtcDisplay = () => {
     setAudio(false);
     state.inboundStream = undefined;
     state.negotingOffer = false;
+    state.userMediaStream = undefined;
   };
 
   const endCall = () => {
