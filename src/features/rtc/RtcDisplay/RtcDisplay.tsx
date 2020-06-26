@@ -277,7 +277,7 @@ const RtcDisplay = () => {
     };
   };
 
-  const disableVideo = () => {
+  const disableVideo = async () => {
     (document.querySelector("#myvideo") as any).srcObject &&
       (document.querySelector("#myvideo") as any).srcObject
         .getTracks()
@@ -316,13 +316,13 @@ const RtcDisplay = () => {
 
   const enableAudio = async (mediaConstraints: MediaStreamConstraints) => {};
 
-  const updateMedia = (mediaConstraints: MediaStreamConstraints) => {
+  const updateMedia = async (mediaConstraints: MediaStreamConstraints) => {
     if (mediaConstraints.video) {
-      enableVideo(mediaConstraints);
+      await enableVideo(mediaConstraints);
     } else if (mediaConstraints.audio) {
-      enableAudio(mediaConstraints);
+      await enableAudio(mediaConstraints);
     } else {
-      disableMedia();
+      await disableMedia();
     }
   };
 
@@ -338,6 +338,8 @@ const RtcDisplay = () => {
 
   const answerCall = async () => {
     console.log("answer call");
+
+    await updateMedia({ audio, video });
 
     dispatch(
       callAccepted(lastCallMessage.sender.id, lastCallMessage.startTime)
@@ -363,10 +365,11 @@ const RtcDisplay = () => {
   };
 
   useEffect(() => {
-    updateMedia({ audio, video });
-
     const callUser = async () => {
       console.log("calling " + currentCall.peerUserId);
+
+      await updateMedia({ audio, video });
+
       setDialed(true);
 
       console.log("calluser: calling", currentCall.peerUserId);
