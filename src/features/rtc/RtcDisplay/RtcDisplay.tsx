@@ -140,10 +140,11 @@ const RtcDisplay = () => {
         console.log("offer: error setting remote desc: ", e);
       }
 
-      await connectMedia();
-
       if (!answered) {
         setAnswered(true);
+
+        await connectMedia();
+
         const answer = await state.peerConnection.createAnswer();
 
         try {
@@ -201,8 +202,6 @@ const RtcDisplay = () => {
     state.peerConnection = createPeerConnection(ICE_CONFIG);
     state.inboundStream = undefined;
 
-    await connectMedia();
-
     // send ice candidates to peer
     state.peerConnection.onicecandidate = async event => {
       console.log("candidate sent to peer");
@@ -250,6 +249,8 @@ const RtcDisplay = () => {
 
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
+
+      await connectMedia();
 
       const offer = await state.peerConnection.createOffer();
 
@@ -402,6 +403,8 @@ const RtcDisplay = () => {
       dispatch(callConnected(RtcCallState.OUTGOING_CALL_CONNECTED));
 
       initPeerConnection();
+
+      await connectMedia();
 
       const offer = await state.peerConnection.createOffer();
 
