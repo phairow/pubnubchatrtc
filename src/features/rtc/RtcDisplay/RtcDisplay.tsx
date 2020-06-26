@@ -112,7 +112,7 @@ const RtcDisplay = () => {
         // let iceCandidate = new RTCIceCandidate(message.message.candidate);
         await state.peerConnection.addIceCandidate(message.message.candidate);
       } catch (e) {
-        console.log("condidate: error setting ice candidate: ", e);
+        console.log("candidate: error setting ice candidate: ", e);
       }
     }
 
