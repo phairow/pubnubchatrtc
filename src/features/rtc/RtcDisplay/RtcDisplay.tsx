@@ -235,42 +235,44 @@ const RtcDisplay = () => {
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
-      try {
-        state.negotingOffer = true;
-
-        await connectMedia();
-
-        const offer = await state.peerConnection.createOffer();
-
-        console.log("negotiation: attempting local offer", offer);
-
+      if (dialed) {
         try {
-          await state.peerConnection.setLocalDescription(offer);
+          state.negotingOffer = true;
+
+          await connectMedia();
+
+          const offer = await state.peerConnection.createOffer();
+
+          console.log("negotiation: attempting local offer", offer);
+
+          try {
+            await state.peerConnection.setLocalDescription(offer);
+          } catch (e) {
+            console.log("negotiation: error setting local desc: ", e);
+          }
+
+          console.log(
+            "negotiation: sending offer",
+            state.peerConnection.localDescription
+          );
+
+          console.log("negotiation: sending local offer to peer");
+
+          try {
+            await pubnub.publish({
+              channel: currentCall.peerUserId,
+              message: {
+                offer: state.peerConnection.localDescription
+              }
+            });
+          } catch (e) {
+            console.log("error sending offer from negotiation needed", e);
+          }
         } catch (e) {
-          console.log("negotiation: error setting local desc: ", e);
+          console.log("error in negotiation needed", e);
+        } finally {
+          state.negotingOffer = false;
         }
-
-        console.log(
-          "negotiation: sending offer",
-          state.peerConnection.localDescription
-        );
-
-        console.log("negotiation: sending local offer to peer");
-
-        try {
-          await pubnub.publish({
-            channel: currentCall.peerUserId,
-            message: {
-              offer: state.peerConnection.localDescription
-            }
-          });
-        } catch (e) {
-          console.log("error sending offer from negotiation needed", e);
-        }
-      } catch (e) {
-        console.log("error in negotiation needed", e);
-      } finally {
-        state.negotingOffer = false;
       }
     };
   };
