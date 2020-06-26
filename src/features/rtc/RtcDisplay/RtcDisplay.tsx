@@ -178,8 +178,6 @@ const RtcDisplay = () => {
       } catch (e) {
         console.log("answer: error setting remote desc: ", e);
       }
-
-      await connectMedia();
     }
   };
 
@@ -248,36 +246,32 @@ const RtcDisplay = () => {
     state.peerConnection.onnegotiationneeded = async () => {
       console.log("negotiation: on negotiation needed");
 
-      if (answered) {
-        await connectMedia();
+      const offer = await state.peerConnection.createOffer();
 
-        const offer = await state.peerConnection.createOffer();
+      console.log("negotiation: attempting local offer", offer);
 
-        console.log("negotiation: attempting local offer", offer);
+      try {
+        await state.peerConnection.setLocalDescription(offer);
+      } catch (e) {
+        console.log("negotiation: error setting local desc: ", e);
+      }
 
-        try {
-          await state.peerConnection.setLocalDescription(offer);
-        } catch (e) {
-          console.log("negotiation: error setting local desc: ", e);
-        }
+      console.log(
+        "negotiation: sending offer",
+        state.peerConnection.localDescription
+      );
 
-        console.log(
-          "negotiation: sending offer",
-          state.peerConnection.localDescription
-        );
+      console.log("negotiation: sending local offer to peer");
 
-        console.log("negotiation: sending local offer to peer");
-
-        try {
-          await pubnub.publish({
-            channel: currentCall.peerUserId,
-            message: {
-              offer: state.peerConnection.localDescription
-            }
-          });
-        } catch (e) {
-          console.log("error sending offer from negotiation needed", e);
-        }
+      try {
+        await pubnub.publish({
+          channel: currentCall.peerUserId,
+          message: {
+            offer: state.peerConnection.localDescription
+          }
+        });
+      } catch (e) {
+        console.log("error sending offer from negotiation needed", e);
       }
     };
   };
