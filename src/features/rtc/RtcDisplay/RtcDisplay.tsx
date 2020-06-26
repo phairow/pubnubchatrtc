@@ -116,12 +116,16 @@ const RtcDisplay = () => {
       }
     }
 
-    if (
-      message.message.offer &&
-      message.message.offer.type === "offer" &&
-      (state.negotingOffer || state.peerConnection.signalingState !== "stable")
-    ) {
+    if (message.message.offer && message.message.offer.type === "offer") {
       // we got an ice offer from a peer
+
+      if (
+        state.negotingOffer ||
+        state.peerConnection.signalingState !== "stable"
+      ) {
+        // exit if already negotiating offer or unstable
+        return;
+      }
 
       console.log("offer received from peer", message.message.offer);
 
