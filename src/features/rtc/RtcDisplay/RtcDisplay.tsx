@@ -198,6 +198,8 @@ const RtcDisplay = () => {
     state.peerConnection = createPeerConnection(ICE_CONFIG);
     state.inboundStream = undefined;
 
+    await connectMedia();
+
     // send ice candidates to peer
     state.peerConnection.onicecandidate = async event => {
       console.log("candidate sent to peer");
