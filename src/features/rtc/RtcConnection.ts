@@ -88,24 +88,26 @@ export const createPeerConnection = async () => {
 };
 
 export const connectMedia = async (constraints: MediaStreamConstraints) => {
-  console.log("connect media");
+  console.log("connect media ", constraints);
   if (!state.userMediaStream) {
     console.log("connect media: getting user media");
-    state.userMediaStream = (
-      await navigator.mediaDevices.getUserMedia(constraints)
-    ).clone();
+    state.userMediaStream = await navigator.mediaDevices.getUserMedia(
+      constraints
+    );
   }
 
-  return state.userMediaStream;
+  return state.userMediaStream.clone();
 };
 
 export const disconnectMedia = async () => {
   if (state.userMediaStream) {
     state.userMediaStream.getTracks().forEach(track => track.stop());
+    state.userMediaStream = undefined;
   }
 
   if (state.inboundStream) {
     state.inboundStream.getTracks().forEach(track => track.stop());
+    state.inboundStream = undefined;
   }
 };
 
@@ -115,14 +117,10 @@ export const sendMedia = async () => {
   if (state.userMediaStream) {
     console.log("send media: adding tracks");
 
-    state.peerConnection.getSenders().forEach(sender => {
-      state.peerConnection.removeTrack(sender);
-    });
+    const stream = state.userMediaStream.clone();
 
-    state.userMediaStream.getTracks().forEach(track => {
-      if (state.userMediaStream) {
-        state.peerConnection.addTrack(track, state.userMediaStream);
-      }
+    stream.getTracks().forEach(track => {
+      state.peerConnection.addTrack(track, stream);
     });
   }
 };

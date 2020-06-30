@@ -93,7 +93,11 @@ const RtcDisplay = () => {
     setAnswered(true);
 
     // prompt user for camera access
-    await connectMedia({ audio, video });
+    const mediaStream = await connectMedia({ audio, video });
+
+    if (video) {
+      (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+    }
 
     // update local store with accepted call information
     dispatch(
@@ -254,7 +258,11 @@ const RtcDisplay = () => {
       setDialed(true);
 
       // prompt current user for camera access
-      await connectMedia({ audio, video });
+      const mediaStream = await connectMedia({ audio, video });
+
+      if (video) {
+        (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+      }
 
       // send calling signal to peer
       await signaling.callInit(
