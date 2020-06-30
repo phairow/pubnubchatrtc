@@ -100,7 +100,6 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
     state.userMediaStream = await navigator.mediaDevices.getUserMedia({
       ...constraints,
       video: constraints.video && {
-        facingMode: { exact: "user" },
         width: { exact: 640 },
         height: { exact: 480 }
       }
