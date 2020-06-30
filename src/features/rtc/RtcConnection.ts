@@ -97,9 +97,12 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
   console.log("connect media ", constraints);
   if (!state.userMediaStream) {
     console.log("connect media: getting user media");
-    state.userMediaStream = await navigator.mediaDevices.getUserMedia(
-      constraints
-    );
+    state.userMediaStream = await navigator.mediaDevices.getUserMedia({
+      ...constraints,
+      facingMode: { exact: "user" },
+      width: { exact: 640 },
+      height: { exact: 480 }
+    });
   }
 
   return state.userMediaStream.clone();
