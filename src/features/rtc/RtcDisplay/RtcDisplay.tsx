@@ -214,25 +214,25 @@ const RtcDisplay = () => {
       currentCall.startTime === startTime
     ) {
       setRemoteDescription(offer);
-    }
 
-    await sendMedia();
+      await sendMedia();
 
-    const answer = await createIceAnswer();
+      const answer = await createIceAnswer();
 
-    if (answer) {
       if (answer) {
-        await signaling.iceAnswer(
-          myId,
-          currentCall.peerUserId,
-          currentCall.startTime,
-          answer
-        );
+        if (answer) {
+          await signaling.iceAnswer(
+            myId,
+            currentCall.peerUserId,
+            currentCall.startTime,
+            answer
+          );
+        } else {
+          console.log("onIceOffer: unable to signal ice answer");
+        }
       } else {
-        console.log("onIceOffer: unable to signal ice answer");
+        console.log("onIceOffer: unable to create ice answer");
       }
-    } else {
-      console.log("onIceOffer: unable to create ice answer");
     }
   };
 
