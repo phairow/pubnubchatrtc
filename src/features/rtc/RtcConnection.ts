@@ -80,7 +80,7 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
     );
   }
 
-  return state.userMediaStream.clone();
+  return state.userMediaStream;
 };
 
 export const disconnectMedia = async () => {
@@ -98,14 +98,11 @@ export const sendMedia = () => {
 
   if (state.userMediaStream) {
     console.log("send media: adding tracks");
-    state.userMediaStream
-      .clone()
-      .getTracks()
-      .forEach(track => {
-        if (state.userMediaStream) {
-          state.peerConnection.addTrack(track, state.userMediaStream);
-        }
-      });
+    state.userMediaStream.getTracks().forEach(track => {
+      if (state.userMediaStream) {
+        state.peerConnection.addTrack(track, state.userMediaStream);
+      }
+    });
   }
 };
 
