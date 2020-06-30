@@ -1,6 +1,13 @@
 {
   "rtcDialingTimeoutSeconds": 6,
-  "rtcIceConfig": [],
+  "rtcIceConfig": [
+    { "urls": "stun:stun.l.google.com:19302" },
+    {
+      "urls": "turn:68.183.24.218:3478",
+      "username": "username",
+      "credential": "password"
+    }
+  ],
   "rtcIceConfigAlt": [
     { "urls": "stun:stun.l.google.com:19302" },
     { "urls": "stun:stun1.l.google.com:19302" },
