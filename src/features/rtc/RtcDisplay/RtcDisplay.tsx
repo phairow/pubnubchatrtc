@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { usePubNub } from "pubnub-react";
 import { CrossIcon } from "foundations/components/icons/CrossIcon";
 import {
   Wrapper,
@@ -14,6 +15,7 @@ import { getViewStates } from "../../layout/Selectors";
 import { rtcViewHidden, rtcViewDisplayed } from "../../layout/LayoutActions";
 import {
   callCompleted,
+  callNotAnswered,
   incomingCallReceived,
   incomingCallAccepted,
   outgoingCallAccepted,
@@ -21,6 +23,7 @@ import {
   getLastIncomingCall
 } from "../RtcModel";
 import { RtcCallState } from "../RtcCallState.enum";
+import { RtcCallType } from "../RtcCallType.enum";
 import { getMessagesById } from "../../messages/messageModel";
 import { getUsersById } from "../../users/userModel";
 import { createSelector } from "reselect";
@@ -40,7 +43,6 @@ import {
   sendMedia
 } from "../RtcConnection";
 import { signaling } from "../RtcSignaling";
-import { usePubNub } from "pubnub-react";
 
 export const getLastCallMessage = createSelector(
   [getMessagesById, getLoggedInUserId, getUsersById],
@@ -73,6 +75,13 @@ export const getLastCallMessage = createSelector(
   }
 );
 
+const asyncState: any = {
+  dialed: false,
+  incoming: false,
+  answered: false,
+  peerAnswered: false
+};
+
 const RtcDisplay = () => {
   const pubnub = usePubNub();
   const dispatch = useDispatch();
@@ -88,6 +97,31 @@ const RtcDisplay = () => {
   const views = useSelector(getViewStates);
   const myId = useSelector(getLoggedInUserId);
   const theme = useContext(ThemeContext);
+
+  // TODO: find better way to do this in react or move out of component
+  asyncState.dialed = dialed;
+  asyncState.incoming = incoming;
+  asyncState.answered = answered;
+  asyncState.peerAnswered = peerAnswered;
+
+  const callPeer = async () => {
+    console.log("call peer: calling", currentCall.peerUserId);
+    setDialed(true);
+
+    // prompt current user for camera access
+    const mediaStream = await connectMedia({ audio, video });
+
+    if (video) {
+      (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+    }
+
+    // send calling signal to peer
+    await signaling.callInit(
+      myId,
+      currentCall.peerUserId,
+      currentCall.startTime
+    );
+  };
 
   const answerCall = async () => {
     console.log("answer call");
@@ -116,24 +150,73 @@ const RtcDisplay = () => {
     );
   };
 
-  const endCall = async () => {
-    console.log("end call");
+  const rejectCall = async () => {
+    console.log("reject call");
+    setAnswered(true);
 
-    console.log("end call: sending", currentCall.peerUserId);
+    // prompt user for camera access
+    const mediaStream = await connectMedia({ audio, video });
 
-    // update local store with completed call information
+    if (video) {
+      (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+    }
+
+    // update local store with accepted call information
     dispatch(
-      callCompleted(
-        currentCall.peerUserId,
-        currentCall.startTime,
-        new Date().getTime()
-      )
+      incomingCallAccepted(lastCallMessage.sender.id, lastCallMessage.startTime)
     );
 
-    await signaling.callEnd(
+    await createPeerConnection();
+
+    console.log("reject: sending reject to peer", lastCallMessage.sender.id);
+
+    signaling.callAccept(
       myId,
       lastCallMessage.sender.id,
       lastCallMessage.startTime
+    );
+  };
+
+  const updateCallStatus = async () => {
+    console.log("update call status from: ", currentCall.callState);
+
+    // update local store with completed call information
+    if (
+      currentCall.callState === RtcCallState.CONNECTED ||
+      currentCall.callState === RtcCallState.ACCEPTED
+    ) {
+      dispatch(
+        callCompleted(
+          currentCall.peerUserId,
+          currentCall.startTime,
+          new Date().getTime()
+        )
+      );
+    } else if (
+      currentCall.callState === RtcCallState.INITIATED ||
+      currentCall.callState === RtcCallState.RECEIVING
+    ) {
+      dispatch(
+        callNotAnswered(
+          currentCall.peerUserId,
+          currentCall.startTime,
+          new Date().getTime()
+        )
+      );
+    }
+  };
+
+  const endCall = async () => {
+    console.log("end call");
+
+    updateCallStatus();
+
+    console.log("end call: sending", currentCall.peerUserId);
+
+    await signaling.callEnd(
+      myId,
+      currentCall.peerUserId,
+      currentCall.startTime
     );
 
     closeMedia();
@@ -250,37 +333,23 @@ const RtcDisplay = () => {
     }
   };
 
-  /**
-   * New outgoing call
-   */
-  useEffect(() => {
-    const callPeer = async () => {
-      console.log("call peer: calling", currentCall.peerUserId);
-      setDialed(true);
-
-      // prompt current user for camera access
-      const mediaStream = await connectMedia({ audio, video });
-
-      if (video) {
-        (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+  const onCallTimeout = async () => {
+    if (currentCall.callType === RtcCallType.OUTGOING) {
+      console.log("outgoing call timed out");
+      console.log("dialed", asyncState.dialed);
+      console.log("peer ansswered", asyncState.peerAnswered);
+      if (asyncState.dialed && !asyncState.peerAnswered) {
+        updateCallStatus();
       }
-
-      // send calling signal to peer
-      await signaling.callInit(
-        myId,
-        currentCall.peerUserId,
-        currentCall.startTime
-      );
-    };
-
-    if (
-      !dialed &&
-      !incoming &&
-      currentCall.callState === RtcCallState.INITIATED
-    ) {
-      callPeer();
+    } else {
+      console.log("incoming call timed out");
+      console.log("incoming", asyncState.incoming);
+      console.log("answered", asyncState.dialed);
+      if (asyncState.incoming && !asyncState.answered) {
+        updateCallStatus();
+      }
     }
-  }, [dialed, incoming, currentCall, lastCallMessage, audio, video, myId]);
+  };
 
   /**
    * Initialize signaling
@@ -386,6 +455,9 @@ const RtcDisplay = () => {
     return (
       !isDialing() &&
       currentCall.callState !== RtcCallState.CONNECTED &&
+      currentCall.callState !== RtcCallState.COMPLETED &&
+      currentCall.callState !== RtcCallState.NOT_ANSWERED &&
+      currentCall.callState !== RtcCallState.REJECTED &&
       lastIncomingCall.callState === RtcCallState.RECEIVING
     );
   };
@@ -408,7 +480,6 @@ const RtcDisplay = () => {
       );
     }
     endCall();
-    closeMedia();
   };
 
   const getStateDisplayString = () => {
@@ -419,6 +490,7 @@ const RtcDisplay = () => {
     onCallIncoming,
     onCallAccepted,
     onCallEnded,
+    onCallTimeout,
     onIceCandidate,
     onIceOffer,
     onIceAnswer
@@ -462,6 +534,14 @@ const RtcDisplay = () => {
     };
   });
 
+  if (
+    !dialed &&
+    !incoming &&
+    currentCall.callState === RtcCallState.INITIATED
+  ) {
+    callPeer();
+  }
+
   return (
     <Wrapper displayed={views.Rtc}>
       <Header>
@@ -477,8 +557,22 @@ const RtcDisplay = () => {
       <Body>
         <button onClick={toggleVideo}>Video ({video ? "on" : "off"})</button>
         <button onClick={toggleAudio}>Audio ({audio ? "on" : "off"})</button>
-        {currentCall.callState === RtcCallState.CONNECTED && (
-          <button onClick={endCall}>Connected (click to end call)</button>
+        {(currentCall.callState === RtcCallState.INITIATED ||
+          currentCall.callState === RtcCallState.ACCEPTED ||
+          currentCall.callState === RtcCallState.RECEIVING ||
+          currentCall.callState === RtcCallState.CONNECTED) && (
+          <button onClick={endCall}>
+            {currentCall.callState === RtcCallState.INITIATED
+              ? "Calling"
+              : currentCall.callState === RtcCallState.ACCEPTED
+              ? "Call Accepted"
+              : currentCall.callState === RtcCallState.RECEIVING
+              ? "Receiving"
+              : currentCall.callState === RtcCallState.CONNECTED
+              ? "Connected"
+              : "Call"}{" "}
+            (click to end call)
+          </button>
         )}
         <VideoWrapper>
           <div>{getStateDisplayString()}</div>
@@ -487,6 +581,7 @@ const RtcDisplay = () => {
             <div>
               Receiving Call ...
               <button onClick={answerCall}>Answer</button>
+              <button onClick={rejectCall}>Ignore</button>
             </div>
           )}
           {isCallCompleted() && <div>Call Completed</div>}

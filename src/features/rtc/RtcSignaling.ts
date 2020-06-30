@@ -8,14 +8,24 @@ import {
 import { RtcCallSignalType } from "./RtcCallSignalType.enum";
 import { RtcIceSignalType } from "./RtcIceSignalType.enum";
 import { AppDispatch } from "main/storeTypes";
+import RtcSettings from "config/rtcSettings.json";
+
+const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 
 interface SignalingState {
   pubnub?: Pubnub;
   dispatch?: AppDispatch;
   negotingOffer: boolean;
+  pendingOutgoingCalls: {
+    [key: string]: { peerId: string; startTime: number };
+  };
+  pendingIncomingCalls: {
+    [key: string]: { peerId: string; startTime: number };
+  };
   onCallIncoming: (callerId: string, startTime: number) => void;
   onCallAccepted: (callerId: string, startTime: number) => void;
   onCallEnded: (callerId: string, startTime: number) => void;
+  onCallTimeout: (callerId: string, startTime: number) => void;
   onIceCandidate: (
     callerId: string,
     startTime: number,
@@ -37,9 +47,12 @@ const state: SignalingState = {
   pubnub: undefined,
   dispatch: undefined,
   negotingOffer: false,
+  pendingOutgoingCalls: {},
+  pendingIncomingCalls: {},
   onCallIncoming: (callerId: string, startTime: number) => {},
   onCallAccepted: (callerId: string, startTime: number) => {},
   onCallEnded: (callerId: string, startTime: number) => {},
+  onCallTimeout: (callerId: string, startTime: number) => {},
   onIceCandidate: (
     callerId: string,
     startTime: number,
@@ -85,6 +98,7 @@ const setHandlers = (
   onCallIncoming: (callerId: string, startTime: number) => void,
   onCallAccepted: (callerId: string, startTime: number) => void,
   onCallEnded: (callerId: string, startTime: number) => void,
+  onCallTimeout: () => void,
   onIceCandidate: (
     callerId: string,
     startTime: number,
@@ -105,6 +119,7 @@ const setHandlers = (
   state.onCallIncoming = onCallIncoming;
   state.onCallAccepted = onCallAccepted;
   state.onCallEnded = onCallEnded;
+  state.onCallTimeout = onCallTimeout;
   state.onIceCandidate = onIceCandidate;
   state.onIceOffer = onIceOffer;
   state.onIceAnswer = onIceAnswer;
@@ -117,6 +132,21 @@ const handleCallMessage = (callMessage: RtcCallMessage) => {
       console.log("call received from peer: ", callMessage.senderId);
 
       try {
+        const callKey = callMessage.senderId + callMessage.startTime;
+        state.pendingIncomingCalls[callKey] = {
+          peerId: callMessage.senderId,
+          startTime: callMessage.startTime
+        };
+
+        setTimeout(() => {
+          const callValue = state.pendingIncomingCalls[callKey];
+
+          if (callValue) {
+            delete state.pendingIncomingCalls[callKey];
+            state.onCallTimeout(callValue.peerId, callValue.startTime);
+          }
+        }, DIALING_TIMEOUT_SECONDS * 1000);
+
         state.onCallIncoming(callMessage.senderId, callMessage.startTime);
       } catch (e) {
         console.log("call incoming: error on incoming call: ", e);
@@ -127,6 +157,12 @@ const handleCallMessage = (callMessage: RtcCallMessage) => {
       console.log("call accepted by peer: ", callMessage.senderId);
 
       try {
+        const callKey = callMessage.senderId + callMessage.startTime;
+        const callValue = state.pendingOutgoingCalls[callKey];
+
+        if (callValue) {
+          delete state.pendingOutgoingCalls[callKey];
+        }
         state.onCallAccepted(callMessage.senderId, callMessage.startTime);
       } catch (e) {
         console.log("call accepted: error on accepted call: ", e);
@@ -137,6 +173,18 @@ const handleCallMessage = (callMessage: RtcCallMessage) => {
       console.log("call ended by peer: ", callMessage.senderId);
 
       try {
+        const callKey = callMessage.senderId + callMessage.startTime;
+        const callValueIncoming = state.pendingIncomingCalls[callKey];
+        const callValueOutgoing = state.pendingOutgoingCalls[callKey];
+
+        if (callValueIncoming) {
+          delete state.pendingIncomingCalls[callKey];
+        }
+
+        if (callValueOutgoing) {
+          delete state.pendingOutgoingCalls[callKey];
+        }
+
         state.onCallEnded(callMessage.senderId, callMessage.startTime);
       } catch (e) {
         console.log("call ended: error on ended call: ", e);
@@ -224,15 +272,11 @@ const dispatchSignalingMessage = async (message: Message) => {
   }
 };
 
-const callInit = async (
-  myId: string,
-  peerId: string,
-  callStartTime: number
-) => {
+const callInit = async (myId: string, peerId: string, startTime: number) => {
   const message: RtcCallMessage = {
     type: MessageType.RtcCall,
     callSignalType: RtcCallSignalType.INITIATE,
-    startTime: callStartTime,
+    startTime,
     senderId: myId
   };
 
@@ -240,17 +284,25 @@ const callInit = async (
     channel: peerId,
     message
   });
+
+  const callKey = peerId + startTime;
+  state.pendingOutgoingCalls[callKey] = { peerId, startTime };
+
+  setTimeout(() => {
+    const callValue = state.pendingOutgoingCalls[callKey];
+
+    if (callValue) {
+      delete state.pendingOutgoingCalls[callKey];
+      state.onCallTimeout(callValue.peerId, callValue.startTime);
+    }
+  }, DIALING_TIMEOUT_SECONDS * 1000);
 };
 
-const callAccept = async (
-  myId: string,
-  peerId: string,
-  callStartTime: number
-) => {
+const callAccept = async (myId: string, peerId: string, startTime: number) => {
   const message: RtcCallMessage = {
     type: MessageType.RtcCall,
     callSignalType: RtcCallSignalType.ACCEPT,
-    startTime: callStartTime,
+    startTime,
     senderId: myId
   };
 
@@ -258,13 +310,20 @@ const callAccept = async (
     channel: peerId,
     message
   });
+
+  const callKey = peerId + startTime;
+  const callValue = state.pendingIncomingCalls[callKey];
+
+  if (callValue) {
+    delete state.pendingIncomingCalls[callKey];
+  }
 };
 
-const callEnd = async (myId: string, peerId: string, callStartTime: number) => {
+const callEnd = async (myId: string, peerId: string, startTime: number) => {
   const message: RtcCallMessage = {
     type: MessageType.RtcCall,
     callSignalType: RtcCallSignalType.END,
-    startTime: callStartTime,
+    startTime,
     senderId: myId
   };
 
@@ -272,18 +331,25 @@ const callEnd = async (myId: string, peerId: string, callStartTime: number) => {
     channel: peerId,
     message
   });
+
+  const callKey = peerId + startTime;
+  const callValue = state.pendingOutgoingCalls[callKey];
+
+  if (callValue) {
+    delete state.pendingOutgoingCalls[callKey];
+  }
 };
 
 const iceCandidate = async (
   myId: string,
   peerId: string,
-  callStartTime: number,
+  startTime: number,
   candidate: RTCIceCandidate
 ) => {
   const message: RtcIceMessage = {
     type: MessageType.RtcIce,
     iceSignalType: RtcIceSignalType.CANDIDATE,
-    startTime: callStartTime,
+    startTime,
     senderId: myId,
     candidate
   };
@@ -297,13 +363,13 @@ const iceCandidate = async (
 const iceOffer = async (
   myId: string,
   peerId: string,
-  callStartTime: number,
+  startTime: number,
   offer: RTCSessionDescription
 ) => {
   const message: RtcIceMessage = {
     type: MessageType.RtcIce,
     iceSignalType: RtcIceSignalType.OFFER,
-    startTime: callStartTime,
+    startTime,
     senderId: myId,
     offer
   };
@@ -317,13 +383,13 @@ const iceOffer = async (
 const iceAnswer = async (
   myId: string,
   peerId: string,
-  callStartTime: number,
+  startTime: number,
   answer: RTCSessionDescription
 ) => {
   const message: RtcIceMessage = {
     type: MessageType.RtcIce,
     iceSignalType: RtcIceSignalType.ANSWER,
-    startTime: callStartTime,
+    startTime,
     senderId: myId,
     answer
   };

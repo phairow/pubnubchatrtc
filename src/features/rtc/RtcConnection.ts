@@ -1,7 +1,6 @@
 import RtcSettings from "config/rtcSettings.json";
 
 const ICE_CONFIG = RtcSettings.rtcIceConfig;
-const DIALING_TIMEOUT_SECONDS = RtcSettings.rtcDialingTimeoutSeconds;
 
 interface RtcState {
   peerConnection: RTCPeerConnection;
@@ -95,6 +94,12 @@ export const createPeerConnection = async () => {
 
 export const connectMedia = async (constraints: MediaStreamConstraints) => {
   console.log("connect media ", constraints);
+
+  if (!constraints.audio && !constraints.video) {
+    console.log("connect media: audio and video both false. exiting.");
+    return;
+  }
+
   if (!state.userMediaStream) {
     console.log("connect media: getting user media");
     state.userMediaStream = await navigator.mediaDevices.getUserMedia({

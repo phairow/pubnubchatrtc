@@ -33,7 +33,8 @@ import {
   IncomingCallReceivedAction,
   IncomingCallAcceptedAction,
   OutgoingCallAcceptedAction,
-  CallCompletedAction
+  CallCompletedAction,
+  CallNotAnsweredAction
 } from "../features/rtc/RtcModel";
 
 /**
@@ -71,4 +72,5 @@ export type AppActions =
   | IncomingCallReceivedAction
   | IncomingCallAcceptedAction
   | OutgoingCallAcceptedAction
-  | CallCompletedAction;
+  | CallCompletedAction
+  | CallNotAnsweredAction;
