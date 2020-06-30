@@ -8,6 +8,7 @@ interface RtcState {
   userMediaStream?: MediaStream;
   inboundStream?: MediaStream;
   negotingOffer: boolean;
+  iceCandidates: RTCIceCandidate[];
   iceCandidateHandler: (candidate: RTCIceCandidate | null) => void;
   negotiationNeededHandler: (event: Event) => void;
   trackHandler: (track: RTCTrackEvent) => void;
@@ -18,6 +19,7 @@ let state: RtcState = {
   userMediaStream: undefined,
   inboundStream: undefined,
   negotingOffer: false,
+  iceCandidates: [],
   iceCandidateHandler: (candidate: RTCIceCandidate | null) => {
     console.log("default ice candidate handler");
   },
@@ -34,6 +36,7 @@ export const createPeerConnection = async () => {
 
   state.negotingOffer = false;
   state.inboundStream = undefined;
+  state.iceCandidates = [];
 
   if (state.peerConnection.connectionState !== "closed") {
     try {
@@ -197,11 +200,25 @@ export const setRemoteDescription = async (offer: RTCSessionDescription) => {
   } catch (e) {
     console.log("setRemoteDescription: error setting remote desc: ", e);
   }
+
+  state.iceCandidates.forEach(candidate => {
+    state.peerConnection.addIceCandidate(candidate);
+  });
 };
 
 export const addIceCandidate = async (candidate: RTCIceCandidate) => {
   console.log("ice candidate adding", candidate);
-  state.peerConnection.addIceCandidate(candidate);
+  if (
+    !state.peerConnection.remoteDescription ||
+    !state.peerConnection.remoteDescription.type
+  ) {
+    state.iceCandidates.push(candidate);
+  } else {
+    state.iceCandidates.forEach(candidate => {
+      state.peerConnection.addIceCandidate(candidate);
+    });
+    state.peerConnection.addIceCandidate(candidate);
+  }
 };
 
 export const setIceCandidateHandler = (

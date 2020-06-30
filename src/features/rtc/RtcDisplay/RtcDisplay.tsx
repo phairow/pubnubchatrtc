@@ -452,9 +452,13 @@ const RtcDisplay = () => {
   });
 
   setTrackHandler((e: RTCTrackEvent) => {
-    if (e.streams && e.streams[0]) {
+    const remoteVideo = document.querySelector("#remotevideo") as any;
+    e.track.onunmute = () => {
+      if (remoteVideo.srcObject) {
+        return;
+      }
       (document.querySelector("#remotevideo") as any).srcObject = e.streams[0];
-    }
+    };
   });
 
   return (
