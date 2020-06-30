@@ -25,7 +25,7 @@ import { getUsersById } from "../../users/userModel";
 import { PresenceIndicatorIcon } from "../../../foundations/components/icons/PresenceIndicatorIcon";
 import { getPresenceByConversationId } from "features/memberPresence/memberPresenceModel";
 import { getCurrentConversationId } from "features/currentConversation/currentConversationModel";
-import { callSignalSent } from "../../rtc/RtcModel";
+import { outgoingCallInitiated } from "../../rtc/RtcModel";
 import { getLoggedInUserId } from "../../authentication/authenticationModel";
 
 const UserDetailDialog = () => {
@@ -48,7 +48,7 @@ const UserDetailDialog = () => {
     }).length > 0;
 
   const initiateCall = () => {
-    dispatch(callSignalSent(user.id, new Date().getTime()));
+    dispatch(outgoingCallInitiated(selectedUserId, new Date().getTime()));
     dispatch(rtcViewDisplayed());
   };
 

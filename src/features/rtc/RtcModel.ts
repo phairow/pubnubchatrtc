@@ -1,31 +1,30 @@
 import { AppState } from "main/storeTypes";
 import { createSelector } from "reselect";
 import { AppActions } from "../../main/AppActions";
-import { RtcCallState } from "./RtcCallState";
+import { RtcCallState } from "./RtcCallState.enum";
+import { RtcCallType } from "./RtcCallType.enum";
 
-// both incoming and outgoing calls
-export const CALL_REJECTED = "CALL_REJECTED";
-export const CALL_CONNECTED = "CALL_CONNECTED";
+export const OUTGOING_CALL_INITIATED = "OUTGOING_CALL_INITIATED";
+export const INCOMING_CALL_RECEIVED = "INCOMING_CALL_RECEIVED";
+
+export const INCOMING_CALL_ACCEPTED = "INCOMING_CALL_ACCEPTED";
+export const OUTGOING_CALL_ACCEPTED = "OUTGOING_CALL_ACCEPTED";
+
+// export const CALL_REJECTED = "CALL_REJECTED";
+// export const CALL_CONNECTED = "CALL_CONNECTED";
 export const CALL_COMPLETED = "CALL_COMPLETED";
 
-// only outgoing calls
-export const CALL_SIGNAL_SENT = "CALL_SIGNAL_SENT";
-export const CALL_NOT_ANSWERED = "CALL_NOT_ANSWERED";
-
-// only incoming calls
-export const CALL_ACCEPTED = "CALL_ACCEPTED";
-export const CALL_SIGNAL_RECEIVED = "CALL_SIGNAL_RECEIVED";
-export const CALL_MISSED = "CALL_MISSED";
+// export const CALL_NOT_ANSWERED = "CALL_NOT_ANSWERED";
+// // only incoming calls
+// export const CALL_SIGNAL_RECEIVED = "CALL_SIGNAL_RECEIVED";
+// export const CALL_MISSED = "CALL_MISSED";
 
 export interface RtcCallInfo {
+  callType: RtcCallType;
   callState: RtcCallState;
   peerUserId: string;
   startTime: number;
   endTime?: number;
-  completed?: boolean;
-  missed?: boolean;
-  notAnswered?: boolean;
-  rejected?: boolean;
 }
 
 export interface RtcState {
@@ -35,8 +34,14 @@ export interface RtcState {
 }
 
 const initialState: RtcState = {
-  currentCall: { callState: RtcCallState.NONE, peerUserId: "", startTime: 0 },
+  currentCall: {
+    callType: RtcCallType.NONE,
+    callState: RtcCallState.NONE,
+    peerUserId: "",
+    startTime: 0
+  },
   lastIncomingCall: {
+    callType: RtcCallType.NONE,
     callState: RtcCallState.NONE,
     peerUserId: "",
     startTime: 0
@@ -44,154 +49,147 @@ const initialState: RtcState = {
   callLog: []
 };
 
-export const callSignalSent = (
+export const outgoingCallInitiated = (
   userId: string,
   startTime: number
-): callSignalSentAction => ({
-  type: CALL_SIGNAL_SENT,
+): OutgoingCallInitiatedAction => ({
+  type: OUTGOING_CALL_INITIATED,
   payload: {
     userId,
     startTime
   }
 });
 
-export const callSignalReceived = (
+export const incomingCallReceived = (
   userId: string,
   startTime: number
-): callSignalReceivedAction => ({
-  type: CALL_SIGNAL_RECEIVED,
+): IncomingCallReceivedAction => ({
+  type: INCOMING_CALL_RECEIVED,
   payload: {
     userId,
     startTime
   }
 });
 
-export const callAccepted = (
+export const incomingCallAccepted = (
   userId: string,
   startTime: number
-): callAcceptedAction => ({
-  type: CALL_ACCEPTED,
+): IncomingCallAcceptedAction => ({
+  type: INCOMING_CALL_ACCEPTED,
   payload: {
     userId,
     startTime
   }
 });
 
-export const callMissed = (endTime: number): callMissedAction => ({
-  type: CALL_MISSED,
+export const outgoingCallAccepted = (
+  userId: string,
+  startTime: number
+): OutgoingCallAcceptedAction => ({
+  type: OUTGOING_CALL_ACCEPTED,
   payload: {
-    endTime
+    userId,
+    startTime
   }
 });
 
-export const callNotAnswered = (endTime: number): callNotAnsweredAction => ({
-  type: CALL_NOT_ANSWERED,
-  payload: {
-    endTime
-  }
-});
+// export const callMissed = (endTime: number): callMissedAction => ({
+//   type: CALL_MISSED,
+//   payload: {
+//     endTime
+//   }
+// });
 
-export const callRejected = (
-  status: RtcCallState,
-  endTime: number
-): callRejectedAction => ({
-  type: CALL_REJECTED,
-  payload: {
-    status,
-    endTime
-  }
-});
+// export const callNotAnswered = (endTime: number): callNotAnsweredAction => ({
+//   type: CALL_NOT_ANSWERED,
+//   payload: {
+//     endTime
+//   }
+// });
 
-export const callConnected = (status: RtcCallState): callConnectedAction => ({
-  type: CALL_CONNECTED,
-  payload: {
-    status
-  }
-});
+// export const callRejected = (
+//   status: RtcCallState,
+//   endTime: number
+// ): callRejectedAction => ({
+//   type: CALL_REJECTED,
+//   payload: {
+//     status,
+//     endTime
+//   }
+// });
+
+// export const callConnected = (status: RtcCallState): callConnectedAction => ({
+//   type: CALL_CONNECTED,
+//   payload: {
+//     status
+//   }
+// });
 
 export const callCompleted = (
-  status: RtcCallState,
+  userId: string,
+  startTime: number,
   endTime: number
-): callCompletedAction => ({
+): CallCompletedAction => ({
   type: CALL_COMPLETED,
   payload: {
-    status,
+    userId,
+    startTime,
     endTime
   }
 });
 
-type callSignalSentPayloadType = {
+type CallActionPayload = {
   userId: string;
   startTime: number;
 };
 
-type callSignalReceivedPayloadType = {
+type EndCallActionPayload = {
   userId: string;
   startTime: number;
-};
-
-type callAcceptedPayloadType = {
-  userId: string;
-  startTime: number;
-};
-
-type callRejectedPayloadType = {
-  status: RtcCallState;
   endTime: number;
 };
 
-type callMissedPayloadType = {
-  endTime: number;
-};
-
-type callNotAnsweredPayloadType = {
-  endTime: number;
-};
-
-type callConnectedPayloadType = {
-  status: RtcCallState;
-};
-
-type callCompletedPayloadType = {
-  status: RtcCallState;
-  endTime: number;
-};
-export interface callSignalSentAction {
-  type: typeof CALL_SIGNAL_SENT;
-  payload: callSignalSentPayloadType;
+export interface OutgoingCallInitiatedAction {
+  type: typeof OUTGOING_CALL_INITIATED;
+  payload: CallActionPayload;
 }
 
-export interface callSignalReceivedAction {
-  type: typeof CALL_SIGNAL_RECEIVED;
-  payload: callSignalReceivedPayloadType;
+export interface IncomingCallReceivedAction {
+  type: typeof INCOMING_CALL_RECEIVED;
+  payload: CallActionPayload;
 }
 
-export interface callAcceptedAction {
-  type: typeof CALL_ACCEPTED;
-  payload: callAcceptedPayloadType;
+export interface IncomingCallAcceptedAction {
+  type: typeof INCOMING_CALL_ACCEPTED;
+  payload: CallActionPayload;
 }
 
-export interface callRejectedAction {
-  type: typeof CALL_REJECTED;
-  payload: callRejectedPayloadType;
+export interface OutgoingCallAcceptedAction {
+  type: typeof OUTGOING_CALL_ACCEPTED;
+  payload: CallActionPayload;
 }
 
-export interface callMissedAction {
-  type: typeof CALL_MISSED;
-  payload: callMissedPayloadType;
-}
-export interface callNotAnsweredAction {
-  type: typeof CALL_NOT_ANSWERED;
-  payload: callNotAnsweredPayloadType;
-}
-export interface callConnectedAction {
-  type: typeof CALL_CONNECTED;
-  payload: callConnectedPayloadType;
-}
+// export interface callRejectedAction {
+//   type: typeof CALL_REJECTED;
+//   payload: callRejectedPayloadType;
+// }
 
-export interface callCompletedAction {
+// export interface callMissedAction {
+//   type: typeof CALL_MISSED;
+//   payload: callMissedPayloadType;
+// }
+// export interface callNotAnsweredAction {
+//   type: typeof CALL_NOT_ANSWERED;
+//   payload: callNotAnsweredPayloadType;
+// }
+// export interface callConnectedAction {
+//   type: typeof CALL_CONNECTED;
+//   payload: callConnectedPayloadType;
+// }
+
+export interface CallCompletedAction {
   type: typeof CALL_COMPLETED;
-  payload: callCompletedPayloadType;
+  payload: EndCallActionPayload;
 }
 
 const RtcStateReducer = (
@@ -199,27 +197,25 @@ const RtcStateReducer = (
   action: AppActions
 ): RtcState => {
   switch (action.type) {
-    case CALL_SIGNAL_SENT: {
+    case OUTGOING_CALL_INITIATED:
       return {
         ...state,
         currentCall: {
           peerUserId: action.payload.userId,
-          callState: RtcCallState.DIALING,
+          callType: RtcCallType.OUTGOING,
+          callState: RtcCallState.INITIATED,
           startTime: action.payload.startTime
         }
       };
-    }
-    case CALL_SIGNAL_RECEIVED: {
-      if (
-        state.currentCall.callState === RtcCallState.OUTGOING_CALL_CONNECTED ||
-        state.currentCall.callState === RtcCallState.INCOMING_CALL_CONNECTED
-      ) {
-        // TODO: currently calls received while already in a call will be ignored
-        // we may want to add the ability to end the current call and accept the new one
+    case INCOMING_CALL_RECEIVED:
+      if (state.currentCall.callState === RtcCallState.CONNECTED) {
+        // calls received while already in a call will be missed call and added to the call log.
+        // we may want to add the ability to end the current call and accept a new one in the future.
 
         const newCall = {
           peerUserId: action.payload.userId,
-          callState: RtcCallState.RECEIVING_CALL,
+          callType: RtcCallType.INCOMING,
+          callState: RtcCallState.NOT_ANSWERED,
           startTime: action.payload.startTime,
           missed: true
         };
@@ -231,9 +227,13 @@ const RtcStateReducer = (
         };
       }
 
+      // most recent incoming call wins, we don't have busy
+      // signal and we don't block simultaneous incoming calls
+
       const newCall = {
         peerUserId: action.payload.userId,
-        callState: RtcCallState.RECEIVING_CALL,
+        callType: RtcCallType.INCOMING,
+        callState: RtcCallState.RECEIVING,
         startTime: action.payload.startTime
       };
 
@@ -241,11 +241,30 @@ const RtcStateReducer = (
         ...state,
         lastIncomingCall: newCall
       };
-    }
-    case CALL_ACCEPTED: {
+    case INCOMING_CALL_ACCEPTED:
+      // only the lastIncomingCall can be answered
+
+      if (
+        state.lastIncomingCall.callState === RtcCallState.RECEIVING &&
+        state.lastIncomingCall.peerUserId === action.payload.userId &&
+        state.lastIncomingCall.startTime === action.payload.startTime
+      ) {
+        const currentCall = {
+          ...state.lastIncomingCall,
+          callState: RtcCallState.ACCEPTED
+        };
+
+        return {
+          ...state,
+          lastIncomingCall: currentCall,
+          currentCall
+        };
+      } else {
+        return state;
+      }
+    case OUTGOING_CALL_ACCEPTED:
       const currentCall = {
-        ...state.lastIncomingCall,
-        startTime: action.payload.startTime,
+        ...state.currentCall,
         callState: RtcCallState.ACCEPTED
       };
 
@@ -253,73 +272,78 @@ const RtcStateReducer = (
         ...state,
         currentCall
       };
-    }
-    case CALL_REJECTED: {
-      const currentCall = {
-        ...state.currentCall,
-        endTime: action.payload.endTime,
-        callState: action.payload.status,
-        rejected: true
-      };
+    // case CALL_REJECTED: {
+    //   const currentCall = {
+    //     ...state.currentCall,
+    //     endTime: action.payload.endTime,
+    //     callState: action.payload.status
+    //   };
 
-      return {
-        ...state,
-        currentCall,
-        callLog: [...state.callLog, currentCall]
-      };
-    }
-    case CALL_MISSED: {
-      const currentCall = {
-        ...state.currentCall,
-        endTime: action.payload.endTime,
-        callState: RtcCallState.MISSED_CALL,
-        missed: true
-      };
+    //   return {
+    //     ...state,
+    //     currentCall,
+    //     callLog: [...state.callLog, currentCall]
+    //   };
+    // }
+    // case CALL_MISSED: {
+    //   const currentCall = {
+    //     ...state.currentCall,
+    //     endTime: action.payload.endTime,
+    //     callState: RtcCallState.NOT_ANSWERED
+    //   };
 
-      return {
-        ...state,
-        currentCall,
-        callLog: [...state.callLog, currentCall]
-      };
-    }
-    case CALL_NOT_ANSWERED: {
-      const currentCall = {
-        ...state.currentCall,
-        endTime: action.payload.endTime,
-        callState: RtcCallState.CALL_NOT_ANSWERED,
-        notAnswered: true
-      };
+    //   return {
+    //     ...state,
+    //     currentCall,
+    //     callLog: [...state.callLog, currentCall]
+    //   };
+    // }
+    // case CALL_NOT_ANSWERED: {
+    //   const currentCall = {
+    //     ...state.currentCall,
+    //     endTime: action.payload.endTime,
+    //     callState: RtcCallState.CALL_NOT_ANSWERED,
+    //     notAnswered: true
+    //   };
 
-      return {
-        ...state,
-        currentCall,
-        callLog: [...state.callLog, currentCall]
-      };
-    }
-    case CALL_CONNECTED: {
-      const currentCall = {
-        ...state.currentCall,
-        callState: action.payload.status
-      };
+    //   return {
+    //     ...state,
+    //     currentCall,
+    //     callLog: [...state.callLog, currentCall]
+    //   };
+    // }
+    // case CALL_CONNECTED: {
+    //   const currentCall = {
+    //     ...state.currentCall,
+    //     callState: action.payload.status
+    //   };
 
-      return {
-        ...state,
-        currentCall
-      };
-    }
-    case CALL_COMPLETED: {
-      const currentCall = {
-        ...state.currentCall,
-        callState: action.payload.status,
-        completed: true
-      };
+    //   return {
+    //     ...state,
+    //     currentCall
+    //   };
+    // }
+    case CALL_COMPLETED:
+      // only the currentCall can be answered
 
-      return {
-        ...state,
-        currentCall,
-        callLog: [...state.callLog, currentCall]
-      };
-    }
+      if (
+        state.currentCall.peerUserId === action.payload.userId &&
+        state.currentCall.startTime === action.payload.startTime
+      ) {
+        const currentCall = {
+          ...state.currentCall,
+          callState: RtcCallState.COMPLETED,
+          endTime: action.payload.endTime
+        };
+
+        return {
+          ...state,
+          currentCall,
+          callLog: [...state.callLog, currentCall]
+        };
+      } else {
+        return state;
+      }
     default:
       return state;
   }
@@ -334,7 +358,7 @@ export const getCurrentCall = createSelector(
   }
 );
 
-export const getLastIncommingCall = createSelector(
+export const getLastIncomingCall = createSelector(
   getRtcStateSlice,
   (rtc: RtcState): RtcCallInfo => {
     return rtc.lastIncomingCall;

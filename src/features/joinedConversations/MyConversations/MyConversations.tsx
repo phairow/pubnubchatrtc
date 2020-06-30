@@ -108,6 +108,19 @@ const MyConversations = () => {
             }}
           ></ConversationItem>
         ))}
+        <ConversationItem
+          id={currentUserId}
+          name="Direct Messages"
+          onLeave={() => {}}
+          selected={currentUserId === currentConversationId}
+          key={currentUserId}
+          unreadMessageCount={0}
+          onClick={() => {
+            dispatch(focusOnConversation(currentUserId));
+            dispatch(currentConversationViewDisplayed());
+            dispatch(menuViewHidden());
+          }}
+        ></ConversationItem>
       </ConversationList>
     </Wrapper>
   );

@@ -4,7 +4,8 @@ import {
   createMessageReducer,
   Message as PubNubMessageEnvelope
 } from "pubnub-redux";
-import { RtcCallState } from "features/rtc/RtcCallState";
+import { RtcCallSignalType } from "features/rtc/RtcCallSignalType.enum";
+import { RtcIceSignalType } from "features/rtc/RtcIceSignalType.enum";
 
 /**
  * Define the types of messages that this application is designed to work with.
@@ -13,7 +14,8 @@ import { RtcCallState } from "features/rtc/RtcCallState";
  */
 export enum MessageType {
   Text = "text",
-  Rtc = "rtc"
+  RtcCall = "rtc-signal",
+  RtcIce = "rtc-ice"
 }
 
 /**
@@ -46,20 +48,48 @@ export interface TextMessage extends BaseMessage {
   text: string;
 }
 
-export interface RtcMessage extends BaseMessage {
+/**
+ * RTC signal messages that manage call state
+ */
+export interface RtcCallMessage extends BaseMessage {
   /**
    * type must be "rtc"
    */
-  type: MessageType.Rtc;
+  type: MessageType.RtcCall;
+
+  /**
+   * call start time
+   */
+  startTime: number;
 
   /**
    * The message content with a UTF-8 unicode encoding
    */
-  callState: RtcCallState;
+  callSignalType: RtcCallSignalType;
+}
 
+/**
+ * RTC signal messages that manage ICE negotiation
+ */
+export interface RtcIceMessage extends BaseMessage {
+  /**
+   * type must be "rtc"
+   */
+  type: MessageType.RtcIce;
+
+  /**
+   * call start time
+   */
   startTime: number;
 
-  peerDescription?: object;
+  /**
+   * The message content with a UTF-8 unicode encoding
+   */
+  iceSignalType: RtcIceSignalType;
+
+  offer?: RTCSessionDescription;
+  answer?: RTCSessionDescription;
+  candidate?: RTCIceCandidate | null;
 }
 
 /**
@@ -83,7 +113,7 @@ export interface RtcMessage extends BaseMessage {
  * Using your IDE to find references to AppMessage will help find those areas you
  * need to modify.
  */
-export type AppMessage = TextMessage | RtcMessage;
+export type AppMessage = TextMessage | RtcCallMessage | RtcIceMessage;
 
 /**
  * Customize the PubNub message envelope declaration to include our custom message types

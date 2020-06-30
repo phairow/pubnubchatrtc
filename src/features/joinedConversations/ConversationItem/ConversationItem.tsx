@@ -13,6 +13,8 @@ import { DEFAULT_CONVERSATION } from "features/currentConversation/currentConver
 import { ThemeContext } from "styled-components";
 import getUniqueColor from "foundations/utilities/getUniqueColor";
 import { useMediaQuery } from "foundations/hooks/useMediaQuery";
+import { useSelector } from "react-redux";
+import { getLoggedInUserId } from "features/authentication/authenticationModel";
 
 interface ConversationItemProps {
   selected: boolean;
@@ -37,7 +39,8 @@ const ConversationItem = ({
   unreadMessageCount
 }: ConversationItemProps) => {
   const [isHovering, hoverProps] = useHover({ mouseEnterDelayMS: 0 });
-  const canLeave: boolean = id !== DEFAULT_CONVERSATION;
+  const currentUserId = useSelector(getLoggedInUserId);
+  const canLeave: boolean = id !== DEFAULT_CONVERSATION && id !== currentUserId;
   const theme = useContext(ThemeContext);
   const isTouch = useMediaQuery(theme.mediaQueries.touch);
   const color = getUniqueColor(
