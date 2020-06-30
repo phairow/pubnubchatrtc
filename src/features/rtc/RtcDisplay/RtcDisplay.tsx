@@ -34,6 +34,8 @@ import {
   setRemoteDescription,
   addIceCandidate,
   setIceCandidateHandler,
+  setNegotiationNeededHandler,
+  setTrackHandler,
   sendMedia
 } from "../RtcConnection";
 import { signaling } from "../RtcSignaling";
@@ -422,6 +424,28 @@ const RtcDisplay = () => {
         currentCall.startTime,
         candidate
       );
+    }
+  });
+
+  setNegotiationNeededHandler(async (event: Event) => {
+    console.log("negotiation needed: creating new offer");
+    const offer = await createIceOffer();
+
+    if (offer) {
+      await signaling.iceOffer(
+        myId,
+        currentCall.peerUserId,
+        currentCall.startTime,
+        offer
+      );
+    } else {
+      console.log("negotiation needed: unable to create ice offer");
+    }
+  });
+
+  setTrackHandler((e: RTCTrackEvent) => {
+    if (e.streams && e.streams[0]) {
+      (document.querySelector("#remotevideo") as any).srcObject = e.streams[0];
     }
   });
 

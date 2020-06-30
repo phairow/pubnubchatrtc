@@ -9,6 +9,8 @@ interface RtcState {
   inboundStream?: MediaStream;
   negotingOffer: boolean;
   iceCandidateHandler: (candidate: RTCIceCandidate | null) => void;
+  negotiationNeededHandler: (event: Event) => void;
+  trackHandler: (track: RTCTrackEvent) => void;
 }
 
 let state: RtcState = {
@@ -18,6 +20,12 @@ let state: RtcState = {
   negotingOffer: false,
   iceCandidateHandler: (candidate: RTCIceCandidate | null) => {
     console.log("default ice candidate handler");
+  },
+  negotiationNeededHandler: (event: Event) => {
+    console.log("default negotiation needed handler");
+  },
+  trackHandler: (track: RTCTrackEvent) => {
+    console.log("default track needed handler");
   }
 };
 
@@ -43,6 +51,14 @@ export const createPeerConnection = async () => {
 
   state.peerConnection.onicecandidate = event => {
     return state.iceCandidateHandler(event.candidate);
+  };
+
+  state.peerConnection.onnegotiationneeded = event => {
+    return state.negotiationNeededHandler(event);
+  };
+
+  state.peerConnection.ontrack = event => {
+    return state.trackHandler(event);
   };
 
   state.peerConnection.onconnectionstatechange = event => {
@@ -75,9 +91,9 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
   console.log("connect media");
   if (!state.userMediaStream) {
     console.log("connect media: getting user media");
-    state.userMediaStream = await navigator.mediaDevices.getUserMedia(
-      constraints
-    );
+    state.userMediaStream = (
+      await navigator.mediaDevices.getUserMedia(constraints)
+    ).clone();
   }
 
   return state.userMediaStream;
@@ -93,11 +109,16 @@ export const disconnectMedia = async () => {
   }
 };
 
-export const sendMedia = () => {
+export const sendMedia = async () => {
   console.log("send media");
 
   if (state.userMediaStream) {
     console.log("send media: adding tracks");
+
+    state.peerConnection.getSenders().forEach(sender => {
+      state.peerConnection.removeTrack(sender);
+    });
+
     state.userMediaStream.getTracks().forEach(track => {
       if (state.userMediaStream) {
         state.peerConnection.addTrack(track, state.userMediaStream);
@@ -190,9 +211,26 @@ export const setIceCandidateHandler = (
 ) => {
   state.iceCandidateHandler = handler;
 
-  state.peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
-    console.log("in onicecandidate");
-    handler(event.candidate);
+  state.peerConnection.onicecandidate = event => {
+    return state.iceCandidateHandler(event.candidate);
+  };
+};
+
+export const setNegotiationNeededHandler = (
+  handler: (event: Event) => void
+) => {
+  state.negotiationNeededHandler = handler;
+
+  state.peerConnection.onnegotiationneeded = event => {
+    return state.negotiationNeededHandler(event);
+  };
+};
+
+export const setTrackHandler = (handler: (track: RTCTrackEvent) => void) => {
+  state.trackHandler = handler;
+
+  state.peerConnection.ontrack = event => {
+    return state.trackHandler(event);
   };
 };
 
