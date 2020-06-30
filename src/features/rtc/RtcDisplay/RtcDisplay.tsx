@@ -28,6 +28,7 @@ import { getLoggedInUserId } from "../../authentication/authenticationModel";
 import {
   connectMedia,
   createIceOffer,
+  negotiateIceOffer,
   createIceAnswer,
   createPeerConnection,
   disconnectMedia,
@@ -437,7 +438,7 @@ const RtcDisplay = () => {
 
   setNegotiationNeededHandler(async (event: Event) => {
     console.log("negotiation needed: creating new offer");
-    const offer = await createIceOffer();
+    const offer = await negotiateIceOffer();
 
     if (offer) {
       await signaling.iceOffer(

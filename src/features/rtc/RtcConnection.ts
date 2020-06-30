@@ -7,7 +7,8 @@ interface RtcState {
   peerConnection: RTCPeerConnection;
   userMediaStream?: MediaStream;
   inboundStream?: MediaStream;
-  negotingOffer: boolean;
+  negotiatingOffer: boolean;
+  negotiatingAnswer: boolean;
   iceCandidates: RTCIceCandidate[];
   iceCandidateHandler: (candidate: RTCIceCandidate | null) => void;
   negotiationNeededHandler: (event: Event) => void;
@@ -18,7 +19,8 @@ let state: RtcState = {
   peerConnection: new RTCPeerConnection(),
   userMediaStream: undefined,
   inboundStream: undefined,
-  negotingOffer: false,
+  negotiatingOffer: false,
+  negotiatingAnswer: false,
   iceCandidates: [],
   iceCandidateHandler: (candidate: RTCIceCandidate | null) => {
     console.log("default ice candidate handler");
@@ -34,7 +36,8 @@ let state: RtcState = {
 export const createPeerConnection = async () => {
   console.log("create peer connection");
 
-  state.negotingOffer = false;
+  state.negotiatingOffer = false;
+  state.negotiatingAnswer = false;
   state.inboundStream = undefined;
   state.iceCandidates = [];
 
@@ -125,6 +128,8 @@ export const sendMedia = async () => {
     stream.getTracks().forEach(track => {
       state.peerConnection.addTrack(track, stream);
     });
+
+    console.log("send media: tracks added");
   }
 };
 
@@ -146,19 +151,70 @@ export const createIceOffer = async () => {
   return state.peerConnection.localDescription;
 };
 
-export const createIceAnswer = async () => {
-  const answer = await state.peerConnection.createAnswer();
+export const negotiateIceOffer = async () => {
+  const offer = await state.peerConnection.createOffer();
 
-  console.log("createIceAnswer: attempting local answer", answer);
+  if (state.peerConnection.signalingState !== "stable") return;
+
+  console.log("negotiateIceOffer: attempting local offer", offer);
 
   try {
-    await state.peerConnection.setLocalDescription(answer);
-    console.log(
-      "createIceAnswer: created: ",
-      state.peerConnection.localDescription
-    );
+    if (
+      state.peerConnection.signalingState === "stable" ||
+      state.peerConnection.signalingState === "have-local-offer" ||
+      state.peerConnection.signalingState === "have-remote-pranswer"
+    ) {
+      await state.peerConnection.setLocalDescription(offer);
+      console.log(
+        "negotiateIceOffer: created: ",
+        state.peerConnection.localDescription
+      );
+    } else {
+      console.log(
+        "negotiateIceOffer: invalid state to set local description: ",
+        state.peerConnection.signalingState
+      );
+    }
   } catch (e) {
-    console.log("createIceAnswer: error setting local answer: ", e);
+    console.log("negotiateIceOffer: error setting local offer: ", e);
+  }
+
+  return state.peerConnection.localDescription;
+};
+
+export const createIceAnswer = async () => {
+  if (
+    state.peerConnection.signalingState === "have-remote-offer" ||
+    state.peerConnection.signalingState === "have-local-pranswer"
+  ) {
+    const answer = await state.peerConnection.createAnswer();
+
+    console.log("createIceAnswer: attempting local answer", answer);
+
+    try {
+      if (
+        state.peerConnection.signalingState === "have-local-pranswer" ||
+        state.peerConnection.signalingState === "have-remote-offer"
+      ) {
+        await state.peerConnection.setLocalDescription(answer);
+        console.log(
+          "createIceAnswer: created: ",
+          state.peerConnection.localDescription
+        );
+      } else {
+        console.log(
+          "createIceAnswer: invalid state to set local description: ",
+          state.peerConnection.signalingState
+        );
+      }
+    } catch (e) {
+      console.log("createIceAnswer: error setting local answer: ", e);
+    }
+  } else {
+    console.log(
+      "createIceAnswer: invalid state to create answer: ",
+      state.peerConnection.signalingState
+    );
   }
 
   return state.peerConnection.localDescription;
@@ -167,17 +223,23 @@ export const createIceAnswer = async () => {
 export const setLocalDescription = async (offer: RTCSessionDescription) => {
   console.log(
     "setLocalDescription: ",
-    state.negotingOffer,
+    state.negotiatingOffer,
     state.peerConnection.signalingState
   );
 
-  if (state.negotingOffer || state.peerConnection.signalingState !== "stable") {
-    // exit if already negotiating offer or unstable
-    return;
-  }
-
   try {
-    await state.peerConnection.setLocalDescription(offer);
+    if (
+      state.peerConnection.signalingState === "stable" ||
+      state.peerConnection.signalingState === "have-local-offer" ||
+      state.peerConnection.signalingState === "have-remote-pranswer"
+    ) {
+      await state.peerConnection.setLocalDescription(offer);
+    } else {
+      console.log(
+        "invalid state to set local description: ",
+        state.peerConnection.signalingState
+      );
+    }
   } catch (e) {
     console.log("setLocalDescription: error setting remote desc: ", e);
   }
@@ -186,17 +248,25 @@ export const setLocalDescription = async (offer: RTCSessionDescription) => {
 export const setRemoteDescription = async (offer: RTCSessionDescription) => {
   console.log(
     "setRemoteDescription: ",
-    state.negotingOffer,
+    state.negotiatingOffer,
     state.peerConnection.signalingState
   );
 
-  if (state.negotingOffer || state.peerConnection.signalingState !== "stable") {
-    // exit if already negotiating offer or unstable
-    return;
-  }
-
   try {
-    await state.peerConnection.setRemoteDescription(offer);
+    if (
+      state.peerConnection.signalingState === "stable" ||
+      state.peerConnection.signalingState === "have-local-offer" ||
+      state.peerConnection.signalingState === "have-remote-offer" ||
+      state.peerConnection.signalingState === "have-local-pranswer" ||
+      state.peerConnection.signalingState === "have-remote-pranswer"
+    ) {
+      await state.peerConnection.setRemoteDescription(offer);
+    } else {
+      console.log(
+        "invalid state to set remote description: ",
+        state.peerConnection.signalingState
+      );
+    }
   } catch (e) {
     console.log("setRemoteDescription: error setting remote desc: ", e);
   }
