@@ -188,6 +188,7 @@ export const negotiateIceOffer = async () => {
 
 export const createIceAnswer = async () => {
   if (
+    state.peerConnection.signalingState === "stable" ||
     state.peerConnection.signalingState === "have-remote-offer" ||
     state.peerConnection.signalingState === "have-local-pranswer"
   ) {
@@ -197,6 +198,7 @@ export const createIceAnswer = async () => {
 
     try {
       if (
+        state.peerConnection.signalingState === "stable" ||
         state.peerConnection.signalingState === "have-local-pranswer" ||
         state.peerConnection.signalingState === "have-remote-offer"
       ) {
