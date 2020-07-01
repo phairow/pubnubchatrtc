@@ -117,7 +117,9 @@ const RtcDisplay = () => {
     const mediaStream = await connectMedia({ audio, video });
 
     if (video) {
-      (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+      if (document.querySelector("#myvideo")) {
+        (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+      }
     }
 
     // send calling signal to peer
@@ -138,7 +140,9 @@ const RtcDisplay = () => {
     const mediaStream = await connectMedia({ audio, video });
 
     if (video) {
-      (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+      if (document.querySelector("#myvideo")) {
+        (document.querySelector("#myvideo") as any).srcObject = mediaStream;
+      }
     }
 
     // update local store with accepted call information
@@ -381,7 +385,8 @@ const RtcDisplay = () => {
   const disableAudio = async () => {};
 
   const disableVideo = async () => {
-    (document.querySelector("#myvideo") as any).srcObject &&
+    document.querySelector("#myvideo") &&
+      (document.querySelector("#myvideo") as any).srcObject &&
       (document.querySelector("#myvideo") as any).srcObject
         .getTracks()
         .forEach((track: MediaStreamTrack) => {
@@ -396,7 +401,8 @@ const RtcDisplay = () => {
   };
 
   const disableRemoteVideo = async () => {
-    (document.querySelector("#remotevideo") as any).srcObject &&
+    document.querySelector("#remotevideo") &&
+      (document.querySelector("#remotevideo") as any).srcObject &&
       (document.querySelector("#remotevideo") as any).srcObject
         .getTracks()
         .forEach((track: MediaStreamTrack) => {
@@ -406,7 +412,8 @@ const RtcDisplay = () => {
   };
 
   const disableRemoteAudio = async () => {
-    (document.querySelector("#remoteaudio") as any).srcObject &&
+    document.querySelector("#remoteaudio") &&
+      (document.querySelector("#remoteaudio") as any).srcObject &&
       (document.querySelector("#remoteaudio") as any).srcObject
         .getTracks()
         .forEach((track: MediaStreamTrack) => {
@@ -580,8 +587,24 @@ const RtcDisplay = () => {
         </CloseButton>
       </Header>
       <Body>
-        <button onClick={toggleVideo}>Video ({video ? "on" : "off"})</button>
-        <button onClick={toggleAudio}>Audio ({audio ? "on" : "off"})</button>
+        <button
+          disabled={
+            currentCall.callState !== RtcCallState.INITIATED &&
+            currentCall.callState !== RtcCallState.RECEIVING
+          }
+          onClick={toggleVideo}
+        >
+          Video ({video ? "on" : "off"})
+        </button>
+        <button
+          disabled={
+            currentCall.callState !== RtcCallState.INITIATED &&
+            currentCall.callState !== RtcCallState.RECEIVING
+          }
+          onClick={toggleAudio}
+        >
+          Audio ({audio ? "on" : "off"})
+        </button>
         {(currentCall.callState === RtcCallState.INITIATED ||
           currentCall.callState === RtcCallState.ACCEPTED ||
           currentCall.callState === RtcCallState.RECEIVING ||
