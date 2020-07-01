@@ -594,8 +594,10 @@ const RtcDisplay = () => {
 
   // once
   useEffect(() => {
+    let unlocked = false;
     document.body.addEventListener("touchstart", function() {
-      if (document.querySelector("#audio")) {
+      if (!unlocked && document.querySelector("#audio")) {
+        unlocked = true;
         const audioElem = document.querySelector("#audio") as any;
         audioElem.play();
         audioElem.pause();
@@ -603,7 +605,8 @@ const RtcDisplay = () => {
       }
     });
     document.addEventListener("click", function() {
-      if (document.querySelector("#audio")) {
+      if (!unlocked && document.querySelector("#audio")) {
+        unlocked = true;
         const audioElem = document.querySelector("#audio") as any;
         audioElem.play();
         audioElem.pause();
