@@ -122,7 +122,7 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
     console.log("connect media: getting user media");
     const stream = await navigator.mediaDevices.getUserMedia({
       ...constraints,
-      video: constraints.video && VIDEO_CONSTRAINTS
+      video: constraints.video ? VIDEO_CONSTRAINTS : false
     });
 
     state.userMediaClones.push(stream);
@@ -161,6 +161,7 @@ export const sendMedia = async () => {
     // state.userMediaClones.push(stream);
 
     stream.getTracks().forEach(track => {
+      track.applyConstraints(VIDEO_CONSTRAINTS);
       state.peerConnection.addTrack(track, stream); //.clone();
     });
 
