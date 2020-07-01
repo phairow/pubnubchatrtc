@@ -4,8 +4,8 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
   z-index: 1000;
   position: fixed;
   background: black;
-  max-width: 75%;
-  max-height: 75%
+  max-width: 90%;
+  max-height: 90%;
   color: white;
   line-height: normal;
   display: ${({ theme, displayed }) => (displayed ? "flex" : "none")};
