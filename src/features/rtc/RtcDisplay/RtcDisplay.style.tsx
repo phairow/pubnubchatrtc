@@ -45,13 +45,15 @@ export const Title = styled.div`
 `;
 
 export const LocalVideoWrapper = styled.div`
-  padding-right: 40px;
+  padding-right: 20px;
+  padding-left: 10px;
   float: right;
   display: inline-block;
 `;
 
 export const RemoteVideoWrapper = styled.div`
-  padding-left: 40px;
+  padding-left: 20px;
+  padding-right: 10px;
   float: left;
   display: inline-block;
 `;
