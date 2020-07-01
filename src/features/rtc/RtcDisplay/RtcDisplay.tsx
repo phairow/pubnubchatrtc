@@ -25,7 +25,6 @@ import {
   incomingCallAccepted,
   outgoingCallAccepted,
   getCurrentCall,
-  getLastIncomingCall,
   callCanceled,
   callDeclined,
   callConnected
@@ -94,7 +93,6 @@ const RtcDisplay = () => {
   const [incoming, setIncoming] = useState(false);
   const [answered, setAnswered] = useState(false);
   const currentCall = useSelector(getCurrentCall);
-  const lastIncomingCall = useSelector(getLastIncomingCall);
   const lastCallMessage = useSelector(getLastCallMessage);
   const views = useSelector(getViewStates);
   const myId = useSelector(getLoggedInUserId);
@@ -497,21 +495,7 @@ const RtcDisplay = () => {
   };
 
   const isIncomingCall = () => {
-    return (
-      !isDialing() &&
-      currentCall.callState !== RtcCallState.CONNECTED &&
-      currentCall.callState !== RtcCallState.COMPLETED &&
-      currentCall.callState !== RtcCallState.NOT_ANSWERED &&
-      currentCall.callState !== RtcCallState.CANCELED &&
-      lastIncomingCall.callState === RtcCallState.RECEIVING
-    );
-  };
-
-  const isCallCompleted = () => {
-    return (
-      lastIncomingCall.callState !== RtcCallState.RECEIVING &&
-      currentCall.callState === RtcCallState.COMPLETED
-    );
+    return !isDialing() && currentCall.callState === RtcCallState.RECEIVING;
   };
 
   const closeCall = () => {
