@@ -1,5 +1,5 @@
 {
-  "rtcDialingTimeoutSeconds": 6,
+  "rtcDialingTimeoutSeconds": 25,
   "rtcIceConfig": [
     {
       "urls": ["stun:ws-turn6-back.xirsys.com"]

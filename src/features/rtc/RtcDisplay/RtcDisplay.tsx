@@ -442,20 +442,21 @@ const RtcDisplay = () => {
   };
 
   const enableVideo = async (mediaConstraints: MediaStreamConstraints) => {
-    let stream = await connectMedia({ audio, video });
+    let stream = await connectMedia(mediaConstraints);
 
     if (document.querySelector("#myvideo")) {
       (document.querySelector("#myvideo") as any).srcObject = stream;
     }
-
-    setVideo(true);
   };
 
   const enableAudio = async (mediaConstraints: MediaStreamConstraints) => {
-    setAudio(true);
+    await connectMedia(mediaConstraints);
+    return;
   };
 
   const updateMedia = async (mediaConstraints: MediaStreamConstraints) => {
+    await releaseMedia();
+
     if (mediaConstraints.video) {
       await enableVideo(mediaConstraints);
     } else if (mediaConstraints.audio) {
