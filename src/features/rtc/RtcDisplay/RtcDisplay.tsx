@@ -181,7 +181,7 @@ const RtcDisplay = () => {
     );
   };
 
-  const updateCallStatus = async () => {
+  const updateCallStatus = async (decline?: boolean) => {
     console.log("update call status from: ", currentCall.callState);
 
     // update local store with completed call information
@@ -200,20 +200,30 @@ const RtcDisplay = () => {
       currentCall.callState === RtcCallState.INITIATED ||
       currentCall.callState === RtcCallState.RECEIVING
     ) {
-      dispatch(
-        callNotAnswered(
-          currentCall.peerUserId,
-          currentCall.startTime,
-          new Date().getTime()
-        )
-      );
+      if (decline) {
+        dispatch(
+          callDeclined(
+            currentCall.peerUserId,
+            currentCall.startTime,
+            new Date().getTime()
+          )
+        );
+      } else {
+        dispatch(
+          callNotAnswered(
+            currentCall.peerUserId,
+            currentCall.startTime,
+            new Date().getTime()
+          )
+        );
+      }
     }
   };
 
   const endCall = async () => {
     console.log("end call");
 
-    updateCallStatus();
+    updateCallStatus(true);
 
     console.log("end call: sending", currentCall.peerUserId);
 
