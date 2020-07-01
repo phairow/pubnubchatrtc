@@ -473,7 +473,7 @@ const RtcDisplay = () => {
     setAnswered(false);
     setIncoming(false);
     setVideo(true);
-    setAudio(false);
+    setAudio(true);
     await disableLocalMedia();
     await disableRemoteMedia();
     await disconnectMedia();
