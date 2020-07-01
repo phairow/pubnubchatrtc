@@ -10,7 +10,9 @@ import {
   Title,
   CloseButton,
   MyVideo,
-  RemoteVideo
+  RemoteVideo,
+  LocalVideoWrapper,
+  RemoteVideoWrapper
 } from "./RtcDisplay.style";
 import { ThemeContext } from "styled-components";
 import { getViewStates } from "../../layout/Selectors";
@@ -660,7 +662,7 @@ const RtcDisplay = () => {
             ></RemoteVideo>
             <audio id="remoteaudio" autoPlay={true}></audio>
           </RemoteVideoWrapper>
-          <LocalVideoWraper>
+          <LocalVideoWrapper>
             <div>LocalVideo</div>
             <MyVideo
               id="myvideo"
@@ -668,7 +670,7 @@ const RtcDisplay = () => {
               playsInline={true}
               muted={true}
             ></MyVideo>
-          </LocalVideoWraper>
+          </LocalVideoWrapper>
         </VideoWrapper>
       </Body>
     </Wrapper>
