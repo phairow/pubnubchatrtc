@@ -57,22 +57,26 @@ export const Title = styled.div`
 
 export const LocalVideoWrapper = styled.div`
   float: right;
+  display: inline-block;
+  max-width: 20%;
+  max-height: 20%;
+  width: 20%;
+  height: 20%;
 `;
 
-export const RemoteVideoWrapper = styled.div``;
+export const RemoteVideoWrapper = styled.div`
+  float: left;
+  display: inline-block;
+  max-width: 75%;
+  max-height: 75%;
+  width: 75%;
+  height: 75%;
+`;
 
 export const MyVideo = styled.video`
-  max-width: 25%;
-  max-height: 25%;
-  width: 25%;
-  height: 25%;
   object-fit: contain;
 `;
 
 export const RemoteVideo = styled.video`
-  max-width: 50%;
-  max-height: 50%;
-  width: 50%;
-  height: 50%;
   object-fit: contain;
 `;
