@@ -12,18 +12,18 @@ const ChatUI = () => {
   useEffect(() => {
     let unlocked = false;
     document.body.addEventListener("touchstart", function() {
-      if (!unlocked && document.querySelector("#audio")) {
+      if (!unlocked && document.querySelector("#ring")) {
         unlocked = true;
-        const audioElem = document.querySelector("#audio") as any;
+        const audioElem = document.querySelector("#ring") as any;
         audioElem.play();
         audioElem.pause();
         audioElem.currentTime = 0;
       }
     });
     document.addEventListener("click", function() {
-      if (!unlocked && document.querySelector("#audio")) {
+      if (!unlocked && document.querySelector("#ring")) {
         unlocked = true;
-        const audioElem = document.querySelector("#audio") as any;
+        const audioElem = document.querySelector("#ring") as any;
         audioElem.play();
         audioElem.pause();
         audioElem.currentTime = 0;
