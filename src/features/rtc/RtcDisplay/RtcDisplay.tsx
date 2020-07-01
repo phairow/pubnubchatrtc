@@ -530,7 +530,7 @@ const RtcDisplay = () => {
     }
   };
 
-  if (currentCall.callState === RtcCallState.RECEIVING) {
+  if (incoming && currentCall.callState === RtcCallState.RECEIVING) {
     startRing();
   } else {
     stopRing();
