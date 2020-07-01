@@ -382,17 +382,19 @@ const RtcDisplay = () => {
     signaling.init(pubnub, dispatch);
   }, [pubnub, dispatch]);
 
-  const disableAudio = async () => {};
+  const disableAudio = async () => {
+    return;
+  };
 
   const disableVideo = async () => {
-    document.querySelector("#myvideo") &&
-      (document.querySelector("#myvideo") as any).srcObject &&
-      (document.querySelector("#myvideo") as any).srcObject
-        .getTracks()
-        .forEach((track: MediaStreamTrack) => {
-          track.stop();
-        });
     if (document.querySelector("#myvideo")) {
+      (document.querySelector("#myvideo") as any).srcObject &&
+        (document.querySelector("#myvideo") as any).srcObject
+          .getTracks()
+          .forEach((track: MediaStreamTrack) => {
+            track.stop();
+          });
+
       (document.querySelector("#myvideo") as any).srcObject = undefined;
     }
   };
@@ -403,27 +405,27 @@ const RtcDisplay = () => {
   };
 
   const disableRemoteVideo = async () => {
-    document.querySelector("#remotevideo") &&
-      (document.querySelector("#remotevideo") as any).srcObject &&
-      (document.querySelector("#remotevideo") as any).srcObject
-        .getTracks()
-        .forEach((track: MediaStreamTrack) => {
-          track.stop();
-        });
     if (document.querySelector("#remotevideo")) {
+      (document.querySelector("#remotevideo") as any).srcObject &&
+        (document.querySelector("#remotevideo") as any).srcObject
+          .getTracks()
+          .forEach((track: MediaStreamTrack) => {
+            track.stop();
+          });
+
       (document.querySelector("#remotevideo") as any).srcObject = undefined;
     }
   };
 
   const disableRemoteAudio = async () => {
-    document.querySelector("#remoteaudio") &&
-      (document.querySelector("#remoteaudio") as any).srcObject &&
-      (document.querySelector("#remoteaudio") as any).srcObject
-        .getTracks()
-        .forEach((track: MediaStreamTrack) => {
-          track.stop();
-        });
     if (document.querySelector("#remoteaudio")) {
+      (document.querySelector("#remoteaudio") as any).srcObject &&
+        (document.querySelector("#remoteaudio") as any).srcObject
+          .getTracks()
+          .forEach((track: MediaStreamTrack) => {
+            track.stop();
+          });
+
       (document.querySelector("#remoteaudio") as any).srcObject = undefined;
     }
   };
