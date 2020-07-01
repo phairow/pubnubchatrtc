@@ -81,7 +81,7 @@ const ConversationMembers = () => {
   const isMedium = useMediaQuery(theme.mediaQueries.medium);
   const conversation = useSelector(getCurrentConversationDescription);
   const conversationColor = getUniqueColor(
-    conversation.name,
+    conversation.name || userId,
     (theme.colors.avatars as unknown) as string[]
   );
 
