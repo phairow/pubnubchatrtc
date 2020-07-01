@@ -15,7 +15,6 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
 `;
 
 export const VideoWrapper = styled.div`
-  display: inline-block;
   resize: both;
   overflow: auto;
   & video {
@@ -57,6 +56,7 @@ export const Title = styled.div`
 `;
 
 export const LocalVideoWrapper = styled.div`
+  padding-right: 40px;
   float: right;
   display: inline-block;
   max-width: 20%;
@@ -76,9 +76,9 @@ export const RemoteVideoWrapper = styled.div`
 `;
 
 export const MyVideo = styled.video`
-  object-fit: contain;
+  object-fit: scale-down;
 `;
 
 export const RemoteVideo = styled.video`
-  object-fit: contain;
+  object-fit: scale-down;
 `;
