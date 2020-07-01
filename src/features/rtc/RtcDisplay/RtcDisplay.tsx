@@ -373,16 +373,6 @@ const RtcDisplay = () => {
     }
   };
 
-  useEffect(() => {
-    if (document.querySelector("#ring")) {
-      if (currentCall.callState === RtcCallState.RECEIVING) {
-        (document.querySelector("#ring") as any).play();
-      } else {
-        (document.querySelector("#ring") as any).pause();
-      }
-    }
-  }, [currentCall]);
-
   /**
    * Initialize signaling
    */
@@ -486,6 +476,7 @@ const RtcDisplay = () => {
     setIncoming(false);
     setVideo(true);
     setAudio(true);
+    stopRing();
   };
 
   const isDialing = () => {
@@ -526,6 +517,24 @@ const RtcDisplay = () => {
   const getStateDisplayString = () => {
     return currentCall.callState.replace("_", " ").toLowerCase();
   };
+
+  const startRing = () => {
+    if (document.querySelector("#ring")) {
+      (document.querySelector("#ring") as any).play();
+    }
+  };
+
+  const stopRing = () => {
+    if (document.querySelector("#ring")) {
+      (document.querySelector("#ring") as any).pause();
+    }
+  };
+
+  if (currentCall.callState === RtcCallState.RECEIVING) {
+    startRing();
+  } else {
+    stopRing();
+  }
 
   signaling.setHandlers(
     onCallIncoming,
