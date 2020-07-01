@@ -592,29 +592,6 @@ const RtcDisplay = () => {
     callPeer();
   }
 
-  // once
-  useEffect(() => {
-    let unlocked = false;
-    document.body.addEventListener("touchstart", function() {
-      if (!unlocked && document.querySelector("#audio")) {
-        unlocked = true;
-        const audioElem = document.querySelector("#audio") as any;
-        audioElem.play();
-        audioElem.pause();
-        audioElem.currentTime = 0;
-      }
-    });
-    document.addEventListener("click", function() {
-      if (!unlocked && document.querySelector("#audio")) {
-        unlocked = true;
-        const audioElem = document.querySelector("#audio") as any;
-        audioElem.play();
-        audioElem.pause();
-        audioElem.currentTime = 0;
-      }
-    });
-  }, []);
-
   return (
     <Wrapper displayed={views.Rtc}>
       <Header>
