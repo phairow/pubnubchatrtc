@@ -47,6 +47,7 @@ import {
   setIceCandidateHandler,
   setNegotiationNeededHandler,
   setConnectionStateHandler,
+  setIceConnectionStateHandler,
   setTrackHandler,
   sendMedia
 } from "../RtcConnection";
@@ -614,6 +615,21 @@ const RtcDisplay = () => {
 
       // update local store with call connected status
       dispatch(callConnected(currentCall.peerUserId, currentCall.startTime));
+    }
+  });
+
+  setIceConnectionStateHandler((state: RTCIceConnectionState) => {
+    if (state === "disconnected") {
+      console.log("disconnected: rtc ice connection is no longer stable");
+
+      // update local store with call completed status
+      dispatch(
+        callCompleted(
+          currentCall.peerUserId,
+          currentCall.startTime,
+          new Date().getTime()
+        )
+      );
     }
   });
 

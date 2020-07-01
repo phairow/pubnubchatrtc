@@ -14,6 +14,7 @@ interface RtcState {
   negotiationNeededHandler: (event: Event) => void;
   trackHandler: (event: RTCTrackEvent) => void;
   connectionStateHandler: (state: RTCPeerConnectionState) => void;
+  iceConnectionStateHandler: (state: RTCIceConnectionState) => void;
 }
 
 let state: RtcState = {
@@ -35,6 +36,9 @@ let state: RtcState = {
   },
   connectionStateHandler: (state: RTCPeerConnectionState) => {
     console.log("default connection state handler: ", state);
+  },
+  iceConnectionStateHandler: (state: RTCIceConnectionState) => {
+    console.log("default ice connection state handler: ", state);
   }
 };
 
@@ -83,18 +87,20 @@ export const createPeerConnection = async () => {
       state.peerConnection.connectionState
     );
   };
+
   state.peerConnection.onicegatheringstatechange = event => {
     console.log(
       "onicegatheringstatechange - iceGatheringState: ",
       state.peerConnection.iceGatheringState
     );
   };
+
   state.peerConnection.oniceconnectionstatechange = event => {
-    console.log(
-      "oniceconnectionstatechange - iceConnectionState: ",
+    return state.iceConnectionStateHandler(
       state.peerConnection.iceConnectionState
     );
   };
+
   state.peerConnection.onsignalingstatechange = event => {
     console.log(
       "onsignalingstatechange - signalingState: ",
@@ -358,5 +364,16 @@ export const setConnectionStateHandler = (
   state.connectionStateHandler = handler;
   state.peerConnection.onconnectionstatechange = event => {
     return state.connectionStateHandler(state.peerConnection.connectionState);
+  };
+};
+
+export const setIceConnectionStateHandler = (
+  handler: (state: RTCIceConnectionState) => void
+) => {
+  state.iceConnectionStateHandler = handler;
+  state.peerConnection.oniceconnectionstatechange = event => {
+    return state.iceConnectionStateHandler(
+      state.peerConnection.iceConnectionState
+    );
   };
 };
