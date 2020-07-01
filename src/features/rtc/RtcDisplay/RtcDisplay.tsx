@@ -281,6 +281,17 @@ const RtcDisplay = () => {
             new Date().getTime()
           )
         );
+      } else if (
+        currentCall.callType === RtcCallType.INCOMING &&
+        currentCall.callState === RtcCallState.RECEIVING
+      ) {
+        dispatch(
+          callNotAnswered(
+            currentCall.peerUserId,
+            currentCall.startTime,
+            new Date().getTime()
+          )
+        );
       } else if (currentCall.callState === RtcCallState.CONNECTED) {
         dispatch(
           callCompleted(
