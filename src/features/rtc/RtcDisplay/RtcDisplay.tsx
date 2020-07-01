@@ -374,9 +374,7 @@ const RtcDisplay = () => {
     signaling.init(pubnub, dispatch);
   }, [pubnub, dispatch]);
 
-  const disableAudio = () => {
-    setAudio(false);
-  };
+  const disableAudio = () => {};
 
   const disableVideo = async () => {
     (document.querySelector("#myvideo") as any).srcObject &&
@@ -386,8 +384,6 @@ const RtcDisplay = () => {
           track.stop();
         });
     (document.querySelector("#myvideo") as any).srcObject = undefined;
-
-    setVideo(false);
   };
 
   const disableLocalMedia = () => {
