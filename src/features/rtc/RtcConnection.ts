@@ -5,6 +5,7 @@ const ICE_CONFIG = RtcSettings.rtcIceConfig;
 interface RtcState {
   peerConnection: RTCPeerConnection;
   userMediaStream?: MediaStream;
+  userMediaClones: MediaStream[];
   inboundStream?: MediaStream;
   negotiatingOffer: boolean;
   negotiatingAnswer: boolean;
@@ -18,6 +19,7 @@ interface RtcState {
 let state: RtcState = {
   peerConnection: new RTCPeerConnection(),
   userMediaStream: undefined,
+  userMediaClones: [],
   inboundStream: undefined,
   negotiatingOffer: false,
   negotiatingAnswer: false,
@@ -48,6 +50,7 @@ export const createPeerConnection = async () => {
     try {
       console.log("create peer connection: closing previous peer connection");
       state.peerConnection.close();
+      disconnectMedia();
     } catch (e) {
       console.log("error closing peer connection: ", e);
     }
@@ -119,11 +122,19 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
     });
   }
 
-  return state.userMediaStream.clone();
+  const clone = state.userMediaStream.clone();
+
+  state.userMediaClones.push(clone);
+
+  return clone;
 };
 
 export const disconnectMedia = async () => {
   state.peerConnection.close();
+
+  state.userMediaClones.forEach((stream: MediaStream) => {
+    stream.getTracks().forEach(track => track.stop());
+  });
 
   if (state.userMediaStream) {
     state.userMediaStream.getTracks().forEach(track => track.stop());
@@ -143,6 +154,8 @@ export const sendMedia = async () => {
     console.log("send media: adding tracks");
 
     const stream = state.userMediaStream.clone();
+
+    state.userMediaClones.push(stream);
 
     stream.getTracks().forEach(track => {
       state.peerConnection.addTrack(track, stream);
@@ -348,99 +361,3 @@ export const setConnectionStateHandler = (
     return state.connectionStateHandler(state.peerConnection.connectionState);
   };
 };
-
-//   return state?.userMediaStream.clone();
-// };
-
-// const initPeerConnection = async () => {
-//   state.peerConnection = createPeerConnection(ICE_CONFIG);
-//   state.inboundStream = undefined;
-
-//   // send ice candidates to peer
-//   state.peerConnection.onicecandidate = async e => {
-//     if (e.candidate) {
-//       console.log("candidate sent to peer");
-
-//       console.log("candidate: sending candidate ", e);
-//       console.log(
-//         "candidate: ice candidate length ",
-//         e.candidate && e.candidate.candidate && e.candidate.candidate.length
-//       );
-
-//       try {
-//         await pubnub.publish({
-//           channel: currentCall.peerUserId,
-//           message: {
-//             candidate: e.candidate
-//           }
-//         });
-//       } catch (e) {
-//         console.log("error sending ice candidate to peer", e);
-//       }
-//     }
-//   };
-
-//   state.peerConnection.ontrack = e => {
-//     if (e.streams && e.streams[0]) {
-//       (document.querySelector("#remotevideo") as any).srcObject =
-//         e.streams[0];
-//     } else {
-//       if (!state.inboundStream) {
-//         state.inboundStream = new MediaStream();
-//         (document.querySelector("#remotevideo") as any).srcObject =
-//           state.inboundStream;
-//       }
-//       state.inboundStream.addTrack(e.track);
-//     }
-//   };
-
-//   state.peerConnection.onconnectionstatechange = async e => {
-//     console.log(
-//       "onconnectionstatechange",
-//       state.peerConnection.connectionState
-//     );
-//   };
-
-//   state.peerConnection.onnegotiationneeded = async () => {
-//     console.log("negotiation: on negotiation needed");
-
-//     try {
-//       state.negotingOffer = true;
-
-//       await connectMedia();
-//       await updateMedia({ audio, video });
-
-//       const offer = await state.peerConnection.createOffer();
-
-//       console.log("negotiation: attempting local offer", offer);
-
-//       try {
-//         await state.peerConnection.setLocalDescription(offer);
-//       } catch (e) {
-//         console.log("negotiation: error setting local desc: ", e);
-//       }
-
-//       console.log(
-//         "negotiation: sending offer",
-//         state.peerConnection.localDescription
-//       );
-
-//       console.log("negotiation: sending local offer to peer");
-
-//       try {
-//         await pubnub.publish({
-//           channel: currentCall.peerUserId,
-//           message: {
-//             offer: state.peerConnection.localDescription
-//           }
-//         });
-//       } catch (e) {
-//         console.log("error sending offer from negotiation needed", e);
-//       }
-//     } catch (e) {
-//       console.log("error in negotiation needed", e);
-//     } finally {
-//       state.negotingOffer = false;
-//     }
-//   };
-// };
