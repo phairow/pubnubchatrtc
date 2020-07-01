@@ -82,13 +82,6 @@ export const getLastCallMessage = createSelector(
   }
 );
 
-const asyncState: any = {
-  dialed: false,
-  incoming: false,
-  answered: false,
-  peerAnswered: false
-};
-
 const RtcDisplay = () => {
   const pubnub = usePubNub();
   const dispatch = useDispatch();
@@ -104,12 +97,6 @@ const RtcDisplay = () => {
   const views = useSelector(getViewStates);
   const myId = useSelector(getLoggedInUserId);
   const theme = useContext(ThemeContext);
-
-  // TODO: find better way to do this in react or move out of component
-  asyncState.dialed = dialed;
-  asyncState.incoming = incoming;
-  asyncState.answered = answered;
-  asyncState.peerAnswered = peerAnswered;
 
   const releaseMedia = async () => {
     await disableLocalMedia();
@@ -370,20 +357,31 @@ const RtcDisplay = () => {
   const onCallTimeout = async () => {
     if (currentCall.callType === RtcCallType.OUTGOING) {
       console.log("outgoing call timed out");
-      console.log("dialed", asyncState.dialed);
-      console.log("peer ansswered", asyncState.peerAnswered);
-      if (asyncState.dialed && !asyncState.peerAnswered) {
+      console.log("dialed", dialed);
+      console.log("peer ansswered", peerAnswered);
+      if (dialed && !peerAnswered) {
         updateCallStatus();
       }
     } else {
+      setIncoming(false);
       console.log("incoming call timed out");
-      console.log("incoming", asyncState.incoming);
-      console.log("answered", asyncState.dialed);
-      if (asyncState.incoming && !asyncState.answered) {
+      console.log("incoming", incoming);
+      console.log("answered", dialed);
+      if (incoming && !answered) {
         updateCallStatus();
       }
     }
   };
+
+  useEffect(() => {
+    if (document.querySelector("#ring")) {
+      if (currentCall.callState === RtcCallState.RECEIVING) {
+        (document.querySelector("#ring") as any).play();
+      } else {
+        (document.querySelector("#ring") as any).pause();
+      }
+    }
+  }, [currentCall]);
 
   /**
    * Initialize signaling
@@ -654,7 +652,6 @@ const RtcDisplay = () => {
           )}
           {isCallCompleted() && <div>Call Completed</div>}
           <RemoteVideoWrapper>
-            <div>RemoteVideo</div>
             <RemoteVideo
               id="remotevideo"
               autoPlay={true}
@@ -663,7 +660,6 @@ const RtcDisplay = () => {
             <audio id="remoteaudio" autoPlay={true}></audio>
           </RemoteVideoWrapper>
           <LocalVideoWrapper>
-            <div>LocalVideo</div>
             <MyVideo
               id="myvideo"
               autoPlay={true}
@@ -672,6 +668,14 @@ const RtcDisplay = () => {
             ></MyVideo>
           </LocalVideoWrapper>
         </VideoWrapper>
+        {
+          <audio
+            id="ring"
+            src="/ring.wav"
+            preload="preload"
+            loop={true}
+          ></audio>
+        }
       </Body>
     </Wrapper>
   );
