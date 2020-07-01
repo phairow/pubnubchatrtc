@@ -10,7 +10,7 @@ export const INCOMING_CALL_RECEIVED = "INCOMING_CALL_RECEIVED";
 export const INCOMING_CALL_ACCEPTED = "INCOMING_CALL_ACCEPTED";
 export const OUTGOING_CALL_ACCEPTED = "OUTGOING_CALL_ACCEPTED";
 
-export const CALL_REJECTED = "CALL_REJECTED";
+export const CALL_DECLINED = "CALL_DECLINED";
 export const CALL_CONNECTED = "CALL_CONNECTED";
 export const CALL_COMPLETED = "CALL_COMPLETED";
 export const CALL_NOT_ANSWERED = "CALL_NOT_ANSWERED";
@@ -102,12 +102,12 @@ export const callNotAnswered = (
   }
 });
 
-export const callRejected = (
+export const callDeclined = (
   userId: string,
   startTime: number,
   endTime: number
-): CallRejectedAction => ({
-  type: CALL_REJECTED,
+): CallDeclinedAction => ({
+  type: CALL_DECLINED,
   payload: {
     userId,
     startTime,
@@ -170,8 +170,8 @@ export interface OutgoingCallAcceptedAction {
   payload: CallActionPayload;
 }
 
-export interface CallRejectedAction {
-  type: typeof CALL_REJECTED;
+export interface CallDeclinedAction {
+  type: typeof CALL_DECLINED;
   payload: CompletedCallActionPayload;
 }
 
@@ -270,7 +270,7 @@ const RtcStateReducer = (
         ...state,
         currentCall: acceptedCall
       };
-    case CALL_REJECTED:
+    case CALL_DECLINED:
       // only the currentCall can be completed
 
       if (
@@ -279,7 +279,7 @@ const RtcStateReducer = (
       ) {
         const currentCall = {
           ...state.currentCall,
-          callState: RtcCallState.REJECTED,
+          callState: RtcCallState.DECLINED,
           endTime: action.payload.endTime
         };
 

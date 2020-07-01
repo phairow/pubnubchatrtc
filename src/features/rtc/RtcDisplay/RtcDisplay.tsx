@@ -12,7 +12,8 @@ import {
   MyVideo,
   RemoteVideo,
   LocalVideoWrapper,
-  RemoteVideoWrapper
+  RemoteVideoWrapper,
+  CallStatus
 } from "./RtcDisplay.style";
 import { ThemeContext } from "styled-components";
 import { getViewStates } from "../../layout/Selectors";
@@ -25,7 +26,7 @@ import {
   outgoingCallAccepted,
   getCurrentCall,
   getLastIncomingCall,
-  callRejected,
+  callDeclined,
   callConnected
 } from "../RtcModel";
 import { RtcCallState } from "../RtcCallState.enum";
@@ -158,20 +159,20 @@ const RtcDisplay = () => {
     );
   };
 
-  const rejectCall = async () => {
-    console.log("reject call");
+  const declineCall = async () => {
+    console.log("decline call");
     setAnswered(true);
 
     // update local store with accepted call information
     dispatch(
-      callRejected(
+      callDeclined(
         lastCallMessage.sender.id,
         lastCallMessage.startTime,
         new Date().getTime()
       )
     );
 
-    console.log("reject: sending reject to peer", lastCallMessage.sender.id);
+    console.log("decline: sending decline to peer", lastCallMessage.sender.id);
 
     signaling.callEnd(
       myId,
@@ -274,7 +275,7 @@ const RtcDisplay = () => {
         currentCall.callState === RtcCallState.INITIATED
       ) {
         dispatch(
-          callCompleted(
+          callDeclined(
             currentCall.peerUserId,
             currentCall.startTime,
             new Date().getTime()
@@ -470,7 +471,6 @@ const RtcDisplay = () => {
 
   const closeMedia = async () => {
     await releaseMedia();
-    dispatch(rtcViewHidden());
     setDialed(false);
     setAnswered(false);
     setIncoming(false);
@@ -489,7 +489,7 @@ const RtcDisplay = () => {
       currentCall.callState !== RtcCallState.CONNECTED &&
       currentCall.callState !== RtcCallState.COMPLETED &&
       currentCall.callState !== RtcCallState.NOT_ANSWERED &&
-      currentCall.callState !== RtcCallState.REJECTED &&
+      currentCall.callState !== RtcCallState.DECLINED &&
       lastIncomingCall.callState === RtcCallState.RECEIVING
     );
   };
@@ -512,10 +512,35 @@ const RtcDisplay = () => {
       );
     }
     endCall();
+    dispatch(rtcViewHidden());
   };
 
   const getStateDisplayString = () => {
-    return currentCall.callState.replace("_", " ").toLowerCase();
+    if (currentCall.callState === RtcCallState.INITIATED) {
+      return "Calling";
+    } else if (currentCall.callState === RtcCallState.ACCEPTED) {
+      return "Call Accepted";
+    } else if (currentCall.callState === RtcCallState.RECEIVING) {
+      return "Receiving Call";
+    } else if (currentCall.callState === RtcCallState.CONNECTED) {
+      return "Call Connected";
+    } else if (currentCall.callState === RtcCallState.COMPLETED) {
+      return "Call Completed";
+    } else if (currentCall.callState === RtcCallState.DECLINED) {
+      return "Call Declined";
+    } else if (
+      currentCall.callState === RtcCallState.NOT_ANSWERED &&
+      currentCall.callType === RtcCallType.INCOMING
+    ) {
+      return "Call Missed";
+    } else if (
+      currentCall.callState === RtcCallState.NOT_ANSWERED &&
+      currentCall.callType === RtcCallType.OUTGOING
+    ) {
+      return "Call Not Answered";
+    } else {
+      return "Disconnected";
+    }
   };
 
   const startRing = () => {
@@ -659,27 +684,15 @@ const RtcDisplay = () => {
           currentCall.callState === RtcCallState.ACCEPTED ||
           currentCall.callState === RtcCallState.RECEIVING ||
           currentCall.callState === RtcCallState.CONNECTED) && (
-          <button onClick={endCall}>
-            {currentCall.callState === RtcCallState.INITIATED
-              ? "Calling"
-              : currentCall.callState === RtcCallState.ACCEPTED
-              ? "Call Accepted"
-              : currentCall.callState === RtcCallState.RECEIVING
-              ? "Receiving"
-              : currentCall.callState === RtcCallState.CONNECTED
-              ? "Connected"
-              : "Call"}{" "}
-            (click to end call)
-          </button>
+          <button onClick={endCall}>End Call</button>
         )}
         <VideoWrapper>
-          <div>{getStateDisplayString()}</div>
           {isDialing() && <div>Dialing ...</div>}
           {isIncomingCall() && (
             <div>
               Receiving Call ...
               <button onClick={answerCall}>Answer</button>
-              <button onClick={rejectCall}>Ignore</button>
+              <button onClick={declineCall}>Ignore</button>
             </div>
           )}
           {isCallCompleted() && <div>Call Completed</div>}
@@ -702,6 +715,7 @@ const RtcDisplay = () => {
         </VideoWrapper>
         <audio id="ring" src="/ring.wav" preload="preload" loop={true}></audio>
       </Body>
+      <CallStatus>{getStateDisplayString()}</CallStatus>
     </Wrapper>
   );
 };

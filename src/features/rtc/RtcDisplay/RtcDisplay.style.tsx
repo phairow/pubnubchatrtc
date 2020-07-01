@@ -12,9 +12,7 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
   flex-direction: column;
 `;
 
-export const VideoWrapper = styled.div`
-  display: block;
-`;
+export const VideoWrapper = styled.div``;
 
 export const CloseButton = styled.div`
   margin-top: 2px;
@@ -68,4 +66,12 @@ export const RemoteVideo = styled.video`
   object-fit: scale-down;
   width: 320px;
   height: 320px;
+`;
+
+export const CallStatus = styled.div`
+  padding: 5px;
+  margin-top: 20px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: ${({ theme }) => theme.colors.neutral[3]};
 `;
