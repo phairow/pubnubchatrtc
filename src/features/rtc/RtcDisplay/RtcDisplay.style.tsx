@@ -60,12 +60,12 @@ export const RemoteVideoWrapper = styled.div`
 
 export const MyVideo = styled.video`
   object-fit: scale-down;
-  width: 240px;
-  height: 240px;
+  width: 160px;
+  height: 160px;
 `;
 
 export const RemoteVideo = styled.video`
   object-fit: scale-down;
-  width: 480px;
-  height: 480px;
+  width: 320px;
+  height: 320px;
 `;
