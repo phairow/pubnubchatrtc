@@ -6,6 +6,8 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
   background: black;
   max-width: 90%;
   max-height: 90%;
+  width: 90%;
+  height: 90%;
   color: white;
   line-height: normal;
   display: ${({ theme, displayed }) => (displayed ? "flex" : "none")};
@@ -15,8 +17,10 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
 export const VideoWrapper = styled.div`
   resize: both;
   overflow: auto;
-  width: 100%;
-  height: 100%;
+  max-width: 80%;
+  max-height: 80%;
+  width: 80%;
+  height: 80%;
   & video {
     margin: -2px;
     padding: 2px;
@@ -53,4 +57,20 @@ export const Title = styled.div`
   font-family: ${({ theme }) => theme.fonts.app};
   font-weight: ${({ theme }) => theme.fontWeights.medium};
   text-align: left;
+`;
+
+export const MyVideo = styled.video`
+  max-width: 25%;
+  max-height: 25%;
+  width: 25%;
+  height: 25%;
+  object-fit: contain;
+`;
+
+export const RemoteVideo = styled.video`
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 `;

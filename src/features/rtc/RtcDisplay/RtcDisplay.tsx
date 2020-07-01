@@ -8,7 +8,9 @@ import {
   Header,
   Body,
   Title,
-  CloseButton
+  CloseButton,
+  MyVideo,
+  RemoteVideo
 } from "./RtcDisplay.style";
 import { ThemeContext } from "styled-components";
 import { getViewStates } from "../../layout/Selectors";
@@ -650,16 +652,19 @@ const RtcDisplay = () => {
           )}
           {isCallCompleted() && <div>Call Completed</div>}
           <div>RemoteVideo</div>
-          <video id="remotevideo" autoPlay={true} playsInline={true}></video>
+          <RemoteVideo
+            id="remotevideo"
+            autoPlay={true}
+            playsInline={true}
+          ></RemoteVideo>
           <audio id="remoteaudio" autoPlay={true}></audio>
           <div>LocalVideo</div>
-          <video
-            style={{ width: "25%" }}
+          <MyVideo
             id="myvideo"
             autoPlay={true}
             playsInline={true}
             muted={true}
-          ></video>
+          ></MyVideo>
         </VideoWrapper>
       </Body>
     </Wrapper>
