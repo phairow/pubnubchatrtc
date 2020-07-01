@@ -107,11 +107,17 @@ const RtcDisplay = () => {
   asyncState.answered = answered;
   asyncState.peerAnswered = peerAnswered;
 
+  const releaseMedia = async () => {
+    await disableLocalMedia();
+    await disableRemoteMedia();
+    await disconnectMedia();
+  };
+
   const callPeer = async () => {
     console.log("call peer: calling", currentCall.peerUserId);
     setDialed(true);
 
-    await closeMedia();
+    await releaseMedia();
 
     // prompt current user for camera access
     const mediaStream = await connectMedia({ audio, video });
@@ -134,7 +140,7 @@ const RtcDisplay = () => {
     console.log("answer call");
     setAnswered(true);
 
-    await closeMedia();
+    await releaseMedia();
 
     // prompt user for camera access
     const mediaStream = await connectMedia({ audio, video });
@@ -470,15 +476,13 @@ const RtcDisplay = () => {
   };
 
   const closeMedia = async () => {
+    await releaseMedia();
     dispatch(rtcViewHidden());
     setDialed(false);
     setAnswered(false);
     setIncoming(false);
     setVideo(true);
     setAudio(true);
-    await disableLocalMedia();
-    await disableRemoteMedia();
-    await disconnectMedia();
   };
 
   const isDialing = () => {
