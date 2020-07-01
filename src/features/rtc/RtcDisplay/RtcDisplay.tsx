@@ -392,7 +392,9 @@ const RtcDisplay = () => {
         .forEach((track: MediaStreamTrack) => {
           track.stop();
         });
-    (document.querySelector("#myvideo") as any).srcObject = undefined;
+    if (document.querySelector("#myvideo")) {
+      (document.querySelector("#myvideo") as any).srcObject = undefined;
+    }
   };
 
   const disableLocalMedia = async () => {
@@ -408,7 +410,9 @@ const RtcDisplay = () => {
         .forEach((track: MediaStreamTrack) => {
           track.stop();
         });
-    (document.querySelector("#remotevideo") as any).srcObject = undefined;
+    if (document.querySelector("#remotevideo")) {
+      (document.querySelector("#remotevideo") as any).srcObject = undefined;
+    }
   };
 
   const disableRemoteAudio = async () => {
@@ -419,7 +423,9 @@ const RtcDisplay = () => {
         .forEach((track: MediaStreamTrack) => {
           track.stop();
         });
-    (document.querySelector("#remoteaudio") as any).srcObject = undefined;
+    if (document.querySelector("#remoteaudio")) {
+      (document.querySelector("#remoteaudio") as any).srcObject = undefined;
+    }
   };
 
   const disableRemoteMedia = async () => {
