@@ -14,10 +14,10 @@ export const VideoWrapper = styled.div`
   display: inline-block;
   resize: both;
   overflow: auto;
-  max-width: 90%;
-  max-height: 90%;
-  width: 90%;
-  height: 90%;
+  max-width: 80%;
+  max-height: 80%;
+  width: 80%;
+  height: 80%;
   & video {
     margin: -2px;
     padding: 2px;
@@ -66,12 +66,13 @@ export const LocalVideoWrapper = styled.div`
 `;
 
 export const RemoteVideoWrapper = styled.div`
+  padding-left: 40px;
   float: left;
   display: inline-block;
-  max-width: 75%;
-  max-height: 75%;
-  width: 75%;
-  height: 75%;
+  max-width: 50%;
+  max-height: 50%;
+  width: 50%;
+  height: 50%;
 `;
 
 export const MyVideo = styled.video`
