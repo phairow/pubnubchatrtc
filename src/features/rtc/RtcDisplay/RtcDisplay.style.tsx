@@ -1,6 +1,8 @@
 import styled from "styled-components/macro";
 
 export const Wrapper = styled.div<{ displayed: boolean }>`
+  resize: both;
+  overflow: auto;
   z-index: 1000;
   position: fixed;
   background: black;
@@ -11,8 +13,7 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
 `;
 
 export const VideoWrapper = styled.div`
-  resize: both;
-  overflow: auto;
+  display: block;
 `;
 
 export const CloseButton = styled.div`
@@ -49,26 +50,22 @@ export const LocalVideoWrapper = styled.div`
   padding-right: 40px;
   float: right;
   display: inline-block;
-  max-width: 20%;
-  max-height: 20%;
-  width: 20%;
-  height: 20%;
 `;
 
 export const RemoteVideoWrapper = styled.div`
   padding-left: 40px;
   float: left;
   display: inline-block;
-  max-width: 50%;
-  max-height: 50%;
-  width: 50%;
-  height: 50%;
 `;
 
 export const MyVideo = styled.video`
   object-fit: scale-down;
+  width: 240px;
+  height: 240px;
 `;
 
 export const RemoteVideo = styled.video`
   object-fit: scale-down;
+  width: 480px;
+  height: 480px;
 `;
