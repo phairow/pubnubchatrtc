@@ -397,11 +397,11 @@ export const getCurrentCall = createSelector(
   }
 );
 
-export const getLastIncomingCall = createSelector(
-  getRtcStateSlice,
-  (rtc: RtcState): RtcCallInfo => {
-    return rtc.lastIncomingCall;
-  }
-);
+// export const getLastIncomingCall = createSelector(
+//   getRtcStateSlice,
+//   (rtc: RtcState): RtcCallInfo => {
+//     return rtc.lastIncomingCall;
+//   }
+// );
 
 export { RtcStateReducer };
