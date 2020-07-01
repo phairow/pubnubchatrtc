@@ -610,7 +610,7 @@ const RtcDisplay = () => {
       }
       (document.querySelector("#remotevideo") as any).srcObject = e.streams[0];
       (document.querySelector("#remotevideo") as any).srcObject
-        .getTracks()
+        .getVideoTracks()
         .forEach((track: MediaStreamTrack) => {
           track.applyConstraints(VIDEO_CONSTRAINTS);
         });

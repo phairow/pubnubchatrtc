@@ -158,11 +158,12 @@ export const sendMedia = async () => {
 
     const stream = state.userMediaStream;
 
-    // state.userMediaClones.push(stream);
+    stream.getVideoTracks().forEach(track => {
+      track.applyConstraints(VIDEO_CONSTRAINTS);
+    });
 
     stream.getTracks().forEach(track => {
-      track.applyConstraints(VIDEO_CONSTRAINTS);
-      state.peerConnection.addTrack(track, stream); //.clone();
+      state.peerConnection.addTrack(track, stream);
     });
 
     console.log("send media: tracks added");
