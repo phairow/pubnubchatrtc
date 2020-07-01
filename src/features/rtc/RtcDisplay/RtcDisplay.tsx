@@ -592,6 +592,26 @@ const RtcDisplay = () => {
     callPeer();
   }
 
+  // once
+  useEffect(() => {
+    document.body.addEventListener("touchstart", function() {
+      if (document.querySelector("#audio")) {
+        const audioElem = document.querySelector("#audio") as any;
+        audioElem.play();
+        audioElem.pause();
+        audioElem.currentTime = 0;
+      }
+    });
+    document.addEventListener("click", function() {
+      if (document.querySelector("#audio")) {
+        const audioElem = document.querySelector("#audio") as any;
+        audioElem.play();
+        audioElem.pause();
+        audioElem.currentTime = 0;
+      }
+    });
+  }, []);
+
   return (
     <Wrapper displayed={views.Rtc}>
       <Header>
@@ -668,14 +688,7 @@ const RtcDisplay = () => {
             ></MyVideo>
           </LocalVideoWrapper>
         </VideoWrapper>
-        {
-          <audio
-            id="ring"
-            src="/ring.wav"
-            preload="preload"
-            loop={true}
-          ></audio>
-        }
+        <audio id="ring" src="/ring.wav" preload="preload" loop={true}></audio>
       </Body>
     </Wrapper>
   );
