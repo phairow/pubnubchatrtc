@@ -64,9 +64,9 @@ export const MyVideo = styled.video`
 `;
 
 export const RemoteVideo = styled.video`
-  max-width: 80%;
-  max-height: 80%;
-  width: 80%;
-  height: 80%;
+  max-width: 50%;
+  max-height: 50%;
+  width: 50%;
+  height: 50%;
   object-fit: contain;
 `;
