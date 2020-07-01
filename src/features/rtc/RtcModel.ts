@@ -10,6 +10,7 @@ export const INCOMING_CALL_RECEIVED = "INCOMING_CALL_RECEIVED";
 export const INCOMING_CALL_ACCEPTED = "INCOMING_CALL_ACCEPTED";
 export const OUTGOING_CALL_ACCEPTED = "OUTGOING_CALL_ACCEPTED";
 
+export const CALL_CANCELED = "CALL_CANCELED";
 export const CALL_DECLINED = "CALL_DECLINED";
 export const CALL_CONNECTED = "CALL_CONNECTED";
 export const CALL_COMPLETED = "CALL_COMPLETED";
@@ -115,6 +116,19 @@ export const callDeclined = (
   }
 });
 
+export const callCanceled = (
+  userId: string,
+  startTime: number,
+  endTime: number
+): CallCanceledAction => ({
+  type: CALL_CANCELED,
+  payload: {
+    userId,
+    startTime,
+    endTime
+  }
+});
+
 export const callConnected = (
   userId: string,
   startTime: number
@@ -172,6 +186,11 @@ export interface OutgoingCallAcceptedAction {
 
 export interface CallDeclinedAction {
   type: typeof CALL_DECLINED;
+  payload: CompletedCallActionPayload;
+}
+
+export interface CallCanceledAction {
+  type: typeof CALL_CANCELED;
   payload: CompletedCallActionPayload;
 }
 
@@ -280,6 +299,27 @@ const RtcStateReducer = (
         const currentCall = {
           ...state.currentCall,
           callState: RtcCallState.DECLINED,
+          endTime: action.payload.endTime
+        };
+
+        return {
+          ...state,
+          currentCall,
+          callLog: [...state.callLog, currentCall]
+        };
+      } else {
+        return state;
+      }
+    case CALL_CANCELED:
+      // only the currentCall can be completed
+
+      if (
+        state.currentCall.peerUserId === action.payload.userId &&
+        state.currentCall.startTime === action.payload.startTime
+      ) {
+        const currentCall = {
+          ...state.currentCall,
+          callState: RtcCallState.CANCELED,
           endTime: action.payload.endTime
         };
 

@@ -26,6 +26,7 @@ import {
   outgoingCallAccepted,
   getCurrentCall,
   getLastIncomingCall,
+  callCanceled,
   callDeclined,
   callConnected
 } from "../RtcModel";
@@ -159,20 +160,30 @@ const RtcDisplay = () => {
     );
   };
 
-  const declineCall = async () => {
-    console.log("decline call");
-    setAnswered(true);
+  const cancelCall = async () => {
+    console.log("cancel call");
 
-    // update local store with accepted call information
-    dispatch(
-      callDeclined(
-        lastCallMessage.sender.id,
-        lastCallMessage.startTime,
-        new Date().getTime()
-      )
-    );
+    if (currentCall.callType === RtcCallType.INCOMING) {
+      // update local store with declined call information
+      dispatch(
+        callDeclined(
+          lastCallMessage.sender.id,
+          lastCallMessage.startTime,
+          new Date().getTime()
+        )
+      );
+    } else {
+      // update local store with canceled call information
+      dispatch(
+        callCanceled(
+          lastCallMessage.sender.id,
+          lastCallMessage.startTime,
+          new Date().getTime()
+        )
+      );
+    }
 
-    console.log("decline: sending decline to peer", lastCallMessage.sender.id);
+    console.log("cancel: sending cancel to peer", lastCallMessage.sender.id);
 
     signaling.callEnd(
       myId,
@@ -181,7 +192,7 @@ const RtcDisplay = () => {
     );
   };
 
-  const updateCallStatus = async (decline?: boolean) => {
+  const updateCallStatus = async (cancel?: boolean) => {
     console.log("update call status from: ", currentCall.callState);
 
     // update local store with completed call information
@@ -200,9 +211,9 @@ const RtcDisplay = () => {
       currentCall.callState === RtcCallState.INITIATED ||
       currentCall.callState === RtcCallState.RECEIVING
     ) {
-      if (decline) {
+      if (cancel) {
         dispatch(
-          callDeclined(
+          callCanceled(
             currentCall.peerUserId,
             currentCall.startTime,
             new Date().getTime()
@@ -296,7 +307,7 @@ const RtcDisplay = () => {
         currentCall.callState === RtcCallState.RECEIVING
       ) {
         dispatch(
-          callNotAnswered(
+          callCanceled(
             currentCall.peerUserId,
             currentCall.startTime,
             new Date().getTime()
@@ -510,7 +521,7 @@ const RtcDisplay = () => {
       currentCall.callState !== RtcCallState.CONNECTED &&
       currentCall.callState !== RtcCallState.COMPLETED &&
       currentCall.callState !== RtcCallState.NOT_ANSWERED &&
-      currentCall.callState !== RtcCallState.DECLINED &&
+      currentCall.callState !== RtcCallState.CANCELED &&
       lastIncomingCall.callState === RtcCallState.RECEIVING
     );
   };
@@ -547,6 +558,8 @@ const RtcDisplay = () => {
       return "Call Connected";
     } else if (currentCall.callState === RtcCallState.COMPLETED) {
       return "Call Completed";
+    } else if (currentCall.callState === RtcCallState.CANCELED) {
+      return "Call Canceled";
     } else if (currentCall.callState === RtcCallState.DECLINED) {
       return "Call Declined";
     } else if (
@@ -713,7 +726,7 @@ const RtcDisplay = () => {
             <div>
               Receiving Call ...
               <button onClick={answerCall}>Answer</button>
-              <button onClick={declineCall}>Ignore</button>
+              <button onClick={cancelCall}>Ignore</button>
             </div>
           )}
           {isCallCompleted() && <div>Call Completed</div>}
