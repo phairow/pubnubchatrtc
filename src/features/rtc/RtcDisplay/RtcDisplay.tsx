@@ -20,7 +20,9 @@ import {
   incomingCallAccepted,
   outgoingCallAccepted,
   getCurrentCall,
-  getLastIncomingCall
+  getLastIncomingCall,
+  callRejected,
+  callConnected
 } from "../RtcModel";
 import { RtcCallState } from "../RtcCallState.enum";
 import { RtcCallType } from "../RtcCallType.enum";
@@ -39,6 +41,7 @@ import {
   addIceCandidate,
   setIceCandidateHandler,
   setNegotiationNeededHandler,
+  setConnectionStateHandler,
   setTrackHandler,
   sendMedia
 } from "../RtcConnection";
@@ -154,23 +157,18 @@ const RtcDisplay = () => {
     console.log("reject call");
     setAnswered(true);
 
-    // prompt user for camera access
-    const mediaStream = await connectMedia({ audio, video });
-
-    if (video) {
-      (document.querySelector("#myvideo") as any).srcObject = mediaStream;
-    }
-
     // update local store with accepted call information
     dispatch(
-      incomingCallAccepted(lastCallMessage.sender.id, lastCallMessage.startTime)
+      callRejected(
+        lastCallMessage.sender.id,
+        lastCallMessage.startTime,
+        new Date().getTime()
+      )
     );
-
-    await createPeerConnection();
 
     console.log("reject: sending reject to peer", lastCallMessage.sender.id);
 
-    signaling.callAccept(
+    signaling.callEnd(
       myId,
       lastCallMessage.sender.id,
       lastCallMessage.startTime
@@ -262,15 +260,33 @@ const RtcDisplay = () => {
     console.log("ended: outgoing call ended by peer");
 
     // update local store with completed call information
-    dispatch(
-      callCompleted(
-        currentCall.peerUserId,
-        currentCall.startTime,
-        new Date().getTime()
-      )
-    );
+    if (
+      currentCall.peerUserId === callerId &&
+      currentCall.startTime === startTime
+    ) {
+      if (
+        currentCall.callType === RtcCallType.OUTGOING &&
+        currentCall.callState === RtcCallState.INITIATED
+      ) {
+        dispatch(
+          callCompleted(
+            currentCall.peerUserId,
+            currentCall.startTime,
+            new Date().getTime()
+          )
+        );
+      } else if (currentCall.callState === RtcCallState.CONNECTED) {
+        dispatch(
+          callCompleted(
+            currentCall.peerUserId,
+            currentCall.startTime,
+            new Date().getTime()
+          )
+        );
+      }
 
-    closeMedia();
+      closeMedia();
+    }
   };
 
   const onIceCandidate = async (
@@ -532,6 +548,15 @@ const RtcDisplay = () => {
       }
       (document.querySelector("#remotevideo") as any).srcObject = e.streams[0];
     };
+  });
+
+  setConnectionStateHandler((state: RTCPeerConnectionState) => {
+    if (state === "connected") {
+      console.log("connected: rtc connection is established");
+
+      // update local store with call connected status
+      dispatch(callConnected(currentCall.peerUserId, currentCall.startTime));
+    }
   });
 
   if (

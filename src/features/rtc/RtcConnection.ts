@@ -11,7 +11,8 @@ interface RtcState {
   iceCandidates: RTCIceCandidate[];
   iceCandidateHandler: (candidate: RTCIceCandidate | null) => void;
   negotiationNeededHandler: (event: Event) => void;
-  trackHandler: (track: RTCTrackEvent) => void;
+  trackHandler: (event: RTCTrackEvent) => void;
+  connectionStateHandler: (state: RTCPeerConnectionState) => void;
 }
 
 let state: RtcState = {
@@ -27,8 +28,11 @@ let state: RtcState = {
   negotiationNeededHandler: (event: Event) => {
     console.log("default negotiation needed handler");
   },
-  trackHandler: (track: RTCTrackEvent) => {
-    console.log("default track needed handler");
+  trackHandler: (event: RTCTrackEvent) => {
+    console.log("default track handler");
+  },
+  connectionStateHandler: (state: RTCPeerConnectionState) => {
+    console.log("default connection state handler: ", state);
   }
 };
 
@@ -64,6 +68,10 @@ export const createPeerConnection = async () => {
 
   state.peerConnection.ontrack = event => {
     return state.trackHandler(event);
+  };
+
+  state.peerConnection.onconnectionstatechange = event => {
+    return state.connectionStateHandler(state.peerConnection.connectionState);
   };
 
   state.peerConnection.onconnectionstatechange = event => {
@@ -322,11 +330,20 @@ export const setNegotiationNeededHandler = (
   };
 };
 
-export const setTrackHandler = (handler: (track: RTCTrackEvent) => void) => {
+export const setTrackHandler = (handler: (event: RTCTrackEvent) => void) => {
   state.trackHandler = handler;
 
   state.peerConnection.ontrack = event => {
     return state.trackHandler(event);
+  };
+};
+
+export const setConnectionStateHandler = (
+  handler: (state: RTCPeerConnectionState) => void
+) => {
+  state.connectionStateHandler = handler;
+  state.peerConnection.onconnectionstatechange = event => {
+    return state.connectionStateHandler(state.peerConnection.connectionState);
   };
 };
 

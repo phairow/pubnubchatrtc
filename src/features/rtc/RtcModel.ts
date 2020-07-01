@@ -10,9 +10,8 @@ export const INCOMING_CALL_RECEIVED = "INCOMING_CALL_RECEIVED";
 export const INCOMING_CALL_ACCEPTED = "INCOMING_CALL_ACCEPTED";
 export const OUTGOING_CALL_ACCEPTED = "OUTGOING_CALL_ACCEPTED";
 
-// export const CALL_REJECTED = "CALL_REJECTED";
-// export const CALL_CONNECTED = "CALL_CONNECTED";
-
+export const CALL_REJECTED = "CALL_REJECTED";
+export const CALL_CONNECTED = "CALL_CONNECTED";
 export const CALL_COMPLETED = "CALL_COMPLETED";
 export const CALL_NOT_ANSWERED = "CALL_NOT_ANSWERED";
 
@@ -103,23 +102,29 @@ export const callNotAnswered = (
   }
 });
 
-// export const callRejected = (
-//   status: RtcCallState,
-//   endTime: number
-// ): callRejectedAction => ({
-//   type: CALL_REJECTED,
-//   payload: {
-//     status,
-//     endTime
-//   }
-// });
+export const callRejected = (
+  userId: string,
+  startTime: number,
+  endTime: number
+): CallRejectedAction => ({
+  type: CALL_REJECTED,
+  payload: {
+    userId,
+    startTime,
+    endTime
+  }
+});
 
-// export const callConnected = (status: RtcCallState): callConnectedAction => ({
-//   type: CALL_CONNECTED,
-//   payload: {
-//     status
-//   }
-// });
+export const callConnected = (
+  userId: string,
+  startTime: number
+): CallConnectedAction => ({
+  type: CALL_CONNECTED,
+  payload: {
+    userId,
+    startTime
+  }
+});
 
 export const callCompleted = (
   userId: string,
@@ -165,20 +170,20 @@ export interface OutgoingCallAcceptedAction {
   payload: CallActionPayload;
 }
 
-// export interface callRejectedAction {
-//   type: typeof CALL_REJECTED;
-//   payload: callRejectedPayloadType;
-// }
+export interface CallRejectedAction {
+  type: typeof CALL_REJECTED;
+  payload: CompletedCallActionPayload;
+}
 
 export interface CallNotAnsweredAction {
   type: typeof CALL_NOT_ANSWERED;
   payload: CompletedCallActionPayload;
 }
 
-// export interface callConnectedAction {
-//   type: typeof CALL_CONNECTED;
-//   payload: callConnectedPayloadType;
-// }
+export interface CallConnectedAction {
+  type: typeof CALL_CONNECTED;
+  payload: CallActionPayload;
+}
 
 export interface CallCompletedAction {
   type: typeof CALL_COMPLETED;
@@ -256,28 +261,36 @@ const RtcStateReducer = (
         return state;
       }
     case OUTGOING_CALL_ACCEPTED:
-      const currentCall = {
+      const acceptedCall = {
         ...state.currentCall,
         callState: RtcCallState.ACCEPTED
       };
 
       return {
         ...state,
-        currentCall
+        currentCall: acceptedCall
       };
-    // case CALL_REJECTED: {
-    //   const currentCall = {
-    //     ...state.currentCall,
-    //     endTime: action.payload.endTime,
-    //     callState: action.payload.status
-    //   };
+    case CALL_REJECTED:
+      // only the currentCall can be completed
 
-    //   return {
-    //     ...state,
-    //     currentCall,
-    //     callLog: [...state.callLog, currentCall]
-    //   };
-    // }
+      if (
+        state.currentCall.peerUserId === action.payload.userId &&
+        state.currentCall.startTime === action.payload.startTime
+      ) {
+        const currentCall = {
+          ...state.currentCall,
+          callState: RtcCallState.REJECTED,
+          endTime: action.payload.endTime
+        };
+
+        return {
+          ...state,
+          currentCall,
+          callLog: [...state.callLog, currentCall]
+        };
+      } else {
+        return state;
+      }
     case CALL_NOT_ANSWERED:
       // only the currentCall can be completed
 
@@ -299,17 +312,16 @@ const RtcStateReducer = (
       } else {
         return state;
       }
-    // case CALL_CONNECTED: {
-    //   const currentCall = {
-    //     ...state.currentCall,
-    //     callState: action.payload.status
-    //   };
+    case CALL_CONNECTED:
+      const connectedCall = {
+        ...state.currentCall,
+        callState: RtcCallState.CONNECTED
+      };
 
-    //   return {
-    //     ...state,
-    //     currentCall
-    //   };
-    // }
+      return {
+        ...state,
+        currentCall: connectedCall
+      };
     case CALL_COMPLETED:
       // only the currentCall can be completed
 
