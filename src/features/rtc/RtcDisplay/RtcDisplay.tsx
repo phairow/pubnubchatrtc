@@ -691,7 +691,6 @@ const RtcDisplay = () => {
             ></MyVideo>
           </LocalVideoWrapper>
         </VideoWrapper>
-        <audio id="ring" src="/ring.wav" preload="preload" loop={true}></audio>
       </Body>
     </Wrapper>
   );
