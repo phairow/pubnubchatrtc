@@ -630,6 +630,8 @@ const RtcDisplay = () => {
           new Date().getTime()
         )
       );
+
+      closeMedia();
     }
   });
 
