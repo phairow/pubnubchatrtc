@@ -17,12 +17,6 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
 export const VideoWrapper = styled.div`
   resize: both;
   overflow: auto;
-  & video {
-    margin: -2px;
-    padding: 2px;
-    width: 100%;
-    height: 100%;
-  }
 `;
 
 export const CloseButton = styled.div`
