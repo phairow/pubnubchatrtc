@@ -47,7 +47,7 @@ export const Title = styled.div`
 export const LocalVideoWrapper = styled.div`
   padding-right: 20px;
   padding-left: 10px;
-  padding-top: 10px;
+  padding-top: 20px;
   float: right;
   display: inline-block;
 `;
@@ -55,20 +55,20 @@ export const LocalVideoWrapper = styled.div`
 export const RemoteVideoWrapper = styled.div`
   padding-left: 20px;
   padding-right: 10px;
-  padding-top: 10px;
+  padding-top: 20px;
   float: left;
   display: inline-block;
 `;
 
 export const MyVideo = styled.video`
   object-fit: cover;
-  width: 160px;
+  width: 169px;
   height: 90px;
 `;
 
 export const RemoteVideo = styled.video`
   object-fit: cover;
-  width: 330px;
+  width: 334px;
   height: 180px;
 `;
 
