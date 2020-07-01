@@ -11,6 +11,7 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
 `;
 
 export const VideoWrapper = styled.div`
+  display: inline-block;
   resize: both;
   overflow: auto;
   max-width: 90%;
