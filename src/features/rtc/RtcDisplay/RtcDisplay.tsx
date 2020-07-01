@@ -89,7 +89,7 @@ const RtcDisplay = () => {
   const pubnub = usePubNub();
   const dispatch = useDispatch();
   const [video, setVideo] = useState(true);
-  const [audio, setAudio] = useState(false);
+  const [audio, setAudio] = useState(true);
   const [dialed, setDialed] = useState(false);
   const [peerAnswered, setPeerAnswered] = useState(false);
   const [incoming, setIncoming] = useState(false);
@@ -434,9 +434,12 @@ const RtcDisplay = () => {
   };
 
   const enableVideo = async (mediaConstraints: MediaStreamConstraints) => {
-    let stream = await connectMedia({ audio, video: true });
+    let stream = await connectMedia({ audio, video });
 
-    (document.querySelector("#myvideo") as any).srcObject = stream;
+    if (document.querySelector("#myvideo")) {
+      (document.querySelector("#myvideo") as any).srcObject = stream;
+    }
+
     setVideo(true);
   };
 
