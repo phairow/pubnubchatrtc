@@ -24,5 +24,9 @@
       "username": "username",
       "credential": "password"
     }
-  ]
+  ],
+  "rtcVideoConstraints": {
+    "width": { "min": 320, "max": 640 },
+    "height": { "min": 480, "max": 960 }
+  }
 }

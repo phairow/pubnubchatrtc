@@ -1,6 +1,7 @@
 import RtcSettings from "config/rtcSettings.json";
 
 const ICE_CONFIG = RtcSettings.rtcIceConfig;
+const VIDEO_CONSTRAINTS = RtcSettings.rtcVideoConstraints;
 
 interface RtcState {
   peerConnection: RTCPeerConnection;
@@ -121,10 +122,7 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
     console.log("connect media: getting user media");
     const stream = await navigator.mediaDevices.getUserMedia({
       ...constraints,
-      video: constraints.video && {
-        width: { exact: 640 },
-        height: { exact: 480 }
-      }
+      video: constraints.video && VIDEO_CONSTRAINTS
     });
 
     state.userMediaClones.push(stream);
