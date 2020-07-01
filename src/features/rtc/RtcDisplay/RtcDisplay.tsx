@@ -52,6 +52,9 @@ import {
   sendMedia
 } from "../RtcConnection";
 import { signaling } from "../RtcSignaling";
+import RtcSettings from "config/rtcSettings.json";
+
+const VIDEO_CONSTRAINTS = RtcSettings.rtcVideoConstraints;
 
 export const getLastCallMessage = createSelector(
   [getMessagesById, getLoggedInUserId, getUsersById],
@@ -606,6 +609,11 @@ const RtcDisplay = () => {
         return;
       }
       (document.querySelector("#remotevideo") as any).srcObject = e.streams[0];
+      (document.querySelector("#remotevideo") as any).srcObject
+        .getTracks()
+        .forEach((track: MediaStreamTrack) => {
+          track.applyConstraints(VIDEO_CONSTRAINTS);
+        });
     };
   });
 
