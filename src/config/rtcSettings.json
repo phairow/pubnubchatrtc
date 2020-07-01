@@ -26,10 +26,10 @@
     }
   ],
   "rtcVideoConstraints": {
-    "width": 640,
-    "height": 480,
-    "aspectRatio": 1.333333334,
-    "frameRate": { "max": 30 },
-    "facingMode": { "exact": "user" }
+    "width": 1280,
+    "height": 720,
+    "aspectRatio": 1.777777778,
+    "frameRate": 30,
+    "facingMode": "user"
   }
 }
