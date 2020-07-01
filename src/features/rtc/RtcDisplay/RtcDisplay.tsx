@@ -160,38 +160,6 @@ const RtcDisplay = () => {
     );
   };
 
-  const cancelCall = async () => {
-    console.log("cancel call");
-
-    if (currentCall.callType === RtcCallType.INCOMING) {
-      // update local store with declined call information
-      dispatch(
-        callDeclined(
-          lastCallMessage.sender.id,
-          lastCallMessage.startTime,
-          new Date().getTime()
-        )
-      );
-    } else {
-      // update local store with canceled call information
-      dispatch(
-        callCanceled(
-          lastCallMessage.sender.id,
-          lastCallMessage.startTime,
-          new Date().getTime()
-        )
-      );
-    }
-
-    console.log("cancel: sending cancel to peer", lastCallMessage.sender.id);
-
-    signaling.callEnd(
-      myId,
-      lastCallMessage.sender.id,
-      lastCallMessage.startTime
-    );
-  };
-
   const updateCallStatus = async (cancel?: boolean) => {
     console.log("update call status from: ", currentCall.callState);
 
@@ -726,7 +694,6 @@ const RtcDisplay = () => {
             <div>
               Receiving Call ...
               <button onClick={answerCall}>Answer</button>
-              <button onClick={cancelCall}>Ignore</button>
             </div>
           )}
           {isCallCompleted() && <div>Call Completed</div>}
