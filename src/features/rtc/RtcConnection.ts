@@ -123,6 +123,8 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
 };
 
 export const disconnectMedia = async () => {
+  state.peerConnection.close();
+
   if (state.userMediaStream) {
     state.userMediaStream.getTracks().forEach(track => track.stop());
     state.userMediaStream = undefined;
