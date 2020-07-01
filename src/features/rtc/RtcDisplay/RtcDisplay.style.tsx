@@ -3,6 +3,10 @@ import styled from "styled-components/macro";
 export const Wrapper = styled.div<{ displayed: boolean }>`
   z-index: 1000;
   position: fixed;
+  max-width: 80%;
+  max-height: 80%;
+  width: 80%;
+  height: 80%;
   background: black;
   color: white;
   line-height: normal;
@@ -14,10 +18,6 @@ export const VideoWrapper = styled.div`
   display: inline-block;
   resize: both;
   overflow: auto;
-  max-width: 80%;
-  max-height: 80%;
-  width: 80%;
-  height: 80%;
   & video {
     margin: -2px;
     padding: 2px;
