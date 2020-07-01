@@ -708,7 +708,6 @@ const RtcDisplay = () => {
               <button onClick={answerCall}>Answer</button>
             </div>
           )}
-          {isCallCompleted() && <div>Call Completed</div>}
           <RemoteVideoWrapper>
             <RemoteVideo
               id="remotevideo"
