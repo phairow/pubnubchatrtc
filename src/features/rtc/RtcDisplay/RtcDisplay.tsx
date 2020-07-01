@@ -651,20 +651,24 @@ const RtcDisplay = () => {
             </div>
           )}
           {isCallCompleted() && <div>Call Completed</div>}
-          <div>RemoteVideo</div>
-          <RemoteVideo
-            id="remotevideo"
-            autoPlay={true}
-            playsInline={true}
-          ></RemoteVideo>
-          <audio id="remoteaudio" autoPlay={true}></audio>
-          <div>LocalVideo</div>
-          <MyVideo
-            id="myvideo"
-            autoPlay={true}
-            playsInline={true}
-            muted={true}
-          ></MyVideo>
+          <RemoteVideoWrapper>
+            <div>RemoteVideo</div>
+            <RemoteVideo
+              id="remotevideo"
+              autoPlay={true}
+              playsInline={true}
+            ></RemoteVideo>
+            <audio id="remoteaudio" autoPlay={true}></audio>
+          </RemoteVideoWrapper>
+          <LocalVideoWraper>
+            <div>LocalVideo</div>
+            <MyVideo
+              id="myvideo"
+              autoPlay={true}
+              playsInline={true}
+              muted={true}
+            ></MyVideo>
+          </LocalVideoWraper>
         </VideoWrapper>
       </Body>
     </Wrapper>

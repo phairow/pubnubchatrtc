@@ -55,6 +55,12 @@ export const Title = styled.div`
   text-align: left;
 `;
 
+export const LocalVideoWrapper = styled.div`
+  float: right;
+`;
+
+export const RemoteVideoWrapper = styled.div``;
+
 export const MyVideo = styled.video`
   max-width: 25%;
   max-height: 25%;
