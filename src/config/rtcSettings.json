@@ -26,7 +26,10 @@
     }
   ],
   "rtcVideoConstraints": {
-    "width": { "max": 640 },
-    "height": { "max": 480 }
+    "width": { "min": 320, "ideal": 640, "max": 1280 },
+    "height": { "min": 240, "ideal": 480 },
+    "aspectRatio": 1.333333334,
+    "frameRate": { "max": 30 },
+    "facingMode": { "exact": "user" }
   }
 }
