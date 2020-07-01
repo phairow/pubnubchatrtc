@@ -180,13 +180,23 @@ const RtcDisplay = () => {
       currentCall.callState === RtcCallState.RECEIVING
     ) {
       if (cancel) {
-        dispatch(
-          callCanceled(
-            currentCall.peerUserId,
-            currentCall.startTime,
-            new Date().getTime()
-          )
-        );
+        if (currentCall.callState === RtcCallState.INITIATED) {
+          dispatch(
+            callCanceled(
+              currentCall.peerUserId,
+              currentCall.startTime,
+              new Date().getTime()
+            )
+          );
+        } else {
+          dispatch(
+            callDeclined(
+              currentCall.peerUserId,
+              currentCall.startTime,
+              new Date().getTime()
+            )
+          );
+        }
       } else {
         dispatch(
           callNotAnswered(
