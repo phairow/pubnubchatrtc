@@ -374,7 +374,7 @@ const RtcDisplay = () => {
     signaling.init(pubnub, dispatch);
   }, [pubnub, dispatch]);
 
-  const disableAudio = () => {};
+  const disableAudio = async () => {};
 
   const disableVideo = async () => {
     (document.querySelector("#myvideo") as any).srcObject &&
@@ -386,9 +386,9 @@ const RtcDisplay = () => {
     (document.querySelector("#myvideo") as any).srcObject = undefined;
   };
 
-  const disableLocalMedia = () => {
-    disableVideo();
-    disableAudio();
+  const disableLocalMedia = async () => {
+    await disableVideo();
+    await disableAudio();
   };
 
   const disableRemoteVideo = async () => {
@@ -411,9 +411,9 @@ const RtcDisplay = () => {
     (document.querySelector("#remoteaudio") as any).srcObject = undefined;
   };
 
-  const disableRemoteMedia = () => {
-    disableRemoteVideo();
-    disableRemoteAudio();
+  const disableRemoteMedia = async () => {
+    await disableRemoteVideo();
+    await disableRemoteAudio();
   };
 
   const enableVideo = async (mediaConstraints: MediaStreamConstraints) => {
@@ -447,16 +447,16 @@ const RtcDisplay = () => {
     setAudio(!audio);
   };
 
-  const closeMedia = () => {
+  const closeMedia = async () => {
     dispatch(rtcViewHidden());
     setDialed(false);
     setAnswered(false);
     setIncoming(false);
     setVideo(true);
     setAudio(false);
-    disableLocalMedia();
-    disableRemoteMedia();
-    disconnectMedia();
+    await disableLocalMedia();
+    await disableRemoteMedia();
+    await disconnectMedia();
   };
 
   const isDialing = () => {

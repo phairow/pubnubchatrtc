@@ -50,7 +50,7 @@ export const createPeerConnection = async () => {
     try {
       console.log("create peer connection: closing previous peer connection");
       state.peerConnection.close();
-      disconnectMedia();
+      await disconnectMedia();
     } catch (e) {
       console.log("error closing peer connection: ", e);
     }
