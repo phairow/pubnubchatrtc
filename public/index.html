@@ -35,28 +35,6 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <audio id="ring" src="/ring.wav" preload="preload" loop={true}></audio>
-    <script>
-      let unlocked = false;
-      document.body.addEventListener("touchstart", function() {
-        if (!unlocked) {
-          unlocked = true;
-          var audioElem = document.querySelector("#audio");
-          audioElem.play();
-          audioElem.pause();
-          audioElem.currentTime = 0;
-        }
-      });
-      document.addEventListener("click", function() {
-        if (!unlocked) {
-          unlocked = true;
-          const audioElem = document.querySelector("#audio");
-          audioElem.play();
-          audioElem.pause();
-          audioElem.currentTime = 0;
-        }
-      });
-    </script>
     <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
