@@ -699,10 +699,9 @@ const RtcDisplay = () => {
           <button onClick={endCall}>End Call</button>
         )}
         <VideoWrapper>
-          {isDialing() && <div>Dialing ...</div>}
           {isIncomingCall() && (
             <div>
-              Receiving Call ...
+              <div>&nbsp;</div>
               <button onClick={answerCall}>Answer</button>
             </div>
           )}
