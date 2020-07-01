@@ -4,10 +4,6 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
   z-index: 1000;
   position: fixed;
   background: black;
-  max-width: 90%;
-  max-height: 90%;
-  width: 90%;
-  height: 90%;
   color: white;
   line-height: normal;
   display: ${({ theme, displayed }) => (displayed ? "flex" : "none")};
@@ -17,10 +13,10 @@ export const Wrapper = styled.div<{ displayed: boolean }>`
 export const VideoWrapper = styled.div`
   resize: both;
   overflow: auto;
-  max-width: 80%;
-  max-height: 80%;
-  width: 80%;
-  height: 80%;
+  max-width: 90%;
+  max-height: 90%;
+  width: 90%;
+  height: 90%;
   & video {
     margin: -2px;
     padding: 2px;
@@ -68,9 +64,9 @@ export const MyVideo = styled.video`
 `;
 
 export const RemoteVideo = styled.video`
-  max-width: 100%;
-  max-height: 100%;
-  width: 100%;
-  height: 100%;
+  max-width: 80%;
+  max-height: 80%;
+  width: 80%;
+  height: 80%;
   object-fit: contain;
 `;
