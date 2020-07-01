@@ -651,6 +651,7 @@ const RtcDisplay = () => {
             id="myvideo"
             autoPlay={true}
             playsInline={true}
+            muted={true}
           ></video>
         </VideoWrapper>
       </Body>
