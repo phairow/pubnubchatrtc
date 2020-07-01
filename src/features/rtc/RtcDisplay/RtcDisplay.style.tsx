@@ -61,13 +61,13 @@ export const RemoteVideoWrapper = styled.div`
 export const MyVideo = styled.video`
   object-fit: scale-down;
   width: 160px;
-  height: 160px;
+  height: 90px;
 `;
 
 export const RemoteVideo = styled.video`
   object-fit: scale-down;
   width: 320px;
-  height: 320px;
+  height: 180px;
 `;
 
 export const CallStatus = styled.div`
