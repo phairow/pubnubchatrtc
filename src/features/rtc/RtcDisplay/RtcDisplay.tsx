@@ -111,6 +111,8 @@ const RtcDisplay = () => {
     console.log("call peer: calling", currentCall.peerUserId);
     setDialed(true);
 
+    await closeMedia();
+
     // prompt current user for camera access
     const mediaStream = await connectMedia({ audio, video });
 
@@ -129,6 +131,8 @@ const RtcDisplay = () => {
   const answerCall = async () => {
     console.log("answer call");
     setAnswered(true);
+
+    await closeMedia();
 
     // prompt user for camera access
     const mediaStream = await connectMedia({ audio, video });
