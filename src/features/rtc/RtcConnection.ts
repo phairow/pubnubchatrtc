@@ -113,28 +113,26 @@ export const connectMedia = async (constraints: MediaStreamConstraints) => {
 
   if (!state.userMediaStream) {
     console.log("connect media: getting user media");
-    state.userMediaStream = await navigator.mediaDevices.getUserMedia({
-      ...constraints,
-      video: constraints.video && {
-        width: { exact: 640 },
-        height: { exact: 480 }
-      }
-    });
+    state.userMediaStream = (
+      await navigator.mediaDevices.getUserMedia({
+        ...constraints,
+        video: constraints.video && {
+          width: { exact: 640 },
+          height: { exact: 480 }
+        }
+      })
+    ).clone();
   }
 
-  const clone = state.userMediaStream.clone();
-
-  state.userMediaClones.push(clone);
-
-  return clone;
+  return state.userMediaStream;
 };
 
 export const disconnectMedia = async () => {
   state.peerConnection.close();
 
-  state.userMediaClones.forEach((stream: MediaStream) => {
-    stream.getTracks().forEach(track => track.stop());
-  });
+  // state.userMediaClones.forEach((stream: MediaStream) => {
+  //   stream.getTracks().forEach(track => track.stop());
+  // });
 
   if (state.userMediaStream) {
     state.userMediaStream.getTracks().forEach(track => track.stop());
@@ -153,9 +151,9 @@ export const sendMedia = async () => {
   if (state.userMediaStream) {
     console.log("send media: adding tracks");
 
-    const stream = state.userMediaStream.clone();
+    const stream = state.userMediaStream; //.clone();
 
-    state.userMediaClones.push(stream);
+    // state.userMediaClones.push(stream);
 
     stream.getTracks().forEach(track => {
       state.peerConnection.addTrack(track, stream);
