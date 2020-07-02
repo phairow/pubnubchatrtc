@@ -675,6 +675,20 @@ const RtcDisplay = () => {
         audioElem.currentTime = 0;
       }
     });
+
+    let localDeviceId = "init";
+    navigator.mediaDevices.enumerateDevices().then(function(devices: any) {
+      var newDevice = devices
+        .filter(function(device: any) {
+          return device.kind === "videoinput";
+        })
+        .find(function(device: any, idx: any) {
+          return device.deviceId !== "default";
+        });
+
+      localDeviceId = newDevice ? newDevice.deviceId : null;
+    });
+    console.log("device ", localDeviceId);
   }, []);
 
   return (
