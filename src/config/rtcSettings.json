@@ -27,8 +27,6 @@
   ],
   "rtcVideoConstraints": {
     "width": 1280,
-    "height": 720,
-    "aspectRatio": 1.777777778,
-    "frameRate": 15
+    "height": 720
   }
 }
