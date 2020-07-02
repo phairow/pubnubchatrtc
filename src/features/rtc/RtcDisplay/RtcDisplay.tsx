@@ -603,6 +603,7 @@ const RtcDisplay = () => {
   });
 
   setTrackHandler((e: RTCTrackEvent) => {
+    console.log("setTrackHandler");
     const remoteVideo = document.querySelector("#remotevideo") as any;
     e.track.onunmute = () => {
       if (remoteVideo.srcObject) {
@@ -618,6 +619,7 @@ const RtcDisplay = () => {
   });
 
   setConnectionStateHandler((state: RTCPeerConnectionState) => {
+    console.log("setConnectionStateHandler", state);
     if (state === "connected") {
       console.log("connected: rtc connection is established");
 
@@ -627,6 +629,7 @@ const RtcDisplay = () => {
   });
 
   setIceConnectionStateHandler((state: RTCIceConnectionState) => {
+    console.log("setIceConnectionStateHandler", state);
     if (state === "disconnected") {
       console.log("disconnected: rtc ice connection is no longer stable");
 
