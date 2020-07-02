@@ -25,5 +25,5 @@
       "credential": "password"
     }
   ],
-  "rtcVideoConstraints": true
+  "rtcVideoConstraints": {}
 }
