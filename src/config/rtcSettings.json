@@ -26,7 +26,6 @@
     }
   ],
   "rtcVideoConstraints": {
-    "width": 640,
-    "height": 480
+    "width": { "min": "160" }
   }
 }
