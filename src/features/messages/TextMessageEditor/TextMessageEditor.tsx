@@ -87,9 +87,10 @@ export const TextMessageEditor = ({
     textareaRef.current.focus();
   };
 
+  // resize when ever the value of message changes
   useEffect(() => {
     autoExpand(textareaRef.current);
-  }, [textareaRef]);
+  }, [textareaRef, message]);
 
   return (
     <Wrapper>
