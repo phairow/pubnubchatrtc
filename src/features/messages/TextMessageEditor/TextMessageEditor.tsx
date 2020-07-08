@@ -20,7 +20,7 @@ const autoExpand = (el: HTMLTextAreaElement) => {
   setTimeout(function() {
     el.style.cssText = "height:auto; padding:0";
     el.style.cssText = "height:" + el.scrollHeight + "px";
-  }, 0);
+  }, 100);
 };
 
 /**
@@ -65,6 +65,7 @@ export const TextMessageEditor = ({
 
   const textChanged = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     updateDraft(newTextDraft(message, e.target.value));
+    autoExpand(e.target as HTMLTextAreaElement);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -75,6 +76,9 @@ export const TextMessageEditor = ({
       }
       e.preventDefault();
     }
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     autoExpand(e.target as HTMLTextAreaElement);
   };
 
@@ -97,6 +101,7 @@ export const TextMessageEditor = ({
           value={text}
           onChange={textChanged}
           onKeyPress={handleKeyPress}
+          onKeyUp={handleKeyUp}
           placeholder="Type Message"
         />
         <EmojiInput value={text} onSelection={emojiInserted} />
