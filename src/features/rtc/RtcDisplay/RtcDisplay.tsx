@@ -651,44 +651,54 @@ const RtcDisplay = () => {
     !incoming &&
     currentCall.callState === RtcCallState.INITIATED
   ) {
-    callPeer();
+    try {
+      callPeer();
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   // run this once
   useEffect(() => {
-    let unlocked = false;
-    document.body.addEventListener("touchstart", function() {
-      if (!unlocked && document.querySelector("#ring")) {
-        unlocked = true;
-        const audioElem = document.querySelector("#ring") as any;
-        audioElem.play();
-        audioElem.pause();
-        audioElem.currentTime = 0;
-      }
-    });
-    document.addEventListener("click", function() {
-      if (!unlocked && document.querySelector("#ring")) {
-        unlocked = true;
-        const audioElem = document.querySelector("#ring") as any;
-        audioElem.play();
-        audioElem.pause();
-        audioElem.currentTime = 0;
-      }
-    });
+    try {
+      let unlocked = false;
+      document.body.addEventListener("touchstart", function() {
+        if (!unlocked && document.querySelector("#ring")) {
+          unlocked = true;
+          const audioElem = document.querySelector("#ring") as any;
+          audioElem.play();
+          audioElem.pause();
+          audioElem.currentTime = 0;
+        }
+      });
+      document.addEventListener("click", function() {
+        if (!unlocked && document.querySelector("#ring")) {
+          unlocked = true;
+          const audioElem = document.querySelector("#ring") as any;
+          audioElem.play();
+          audioElem.pause();
+          audioElem.currentTime = 0;
+        }
+      });
+    } catch (e) {
+      console.log(e);
+    }
 
-    let localDeviceId = "init";
-    navigator.mediaDevices.enumerateDevices().then(function(devices: any) {
-      var newDevice = devices
-        .filter(function(device: any) {
-          return device.kind === "videoinput";
-        })
-        .find(function(device: any, idx: any) {
-          return device.deviceId !== "default";
-        });
+    if (navigator.mediaDevices) {
+      let localDeviceId = "init";
+      navigator.mediaDevices.enumerateDevices().then(function(devices: any) {
+        var newDevice = devices
+          .filter(function(device: any) {
+            return device.kind === "videoinput";
+          })
+          .find(function(device: any, idx: any) {
+            return device.deviceId !== "default";
+          });
 
-      localDeviceId = newDevice ? newDevice.deviceId : null;
-    });
-    console.log("device ", localDeviceId);
+        localDeviceId = newDevice ? newDevice.deviceId : null;
+      });
+      console.log("device ", localDeviceId);
+    }
   }, []);
 
   return (
