@@ -336,8 +336,6 @@ const RtcDisplay = () => {
     ) {
       setRemoteDescription(offer);
 
-      await sendMedia();
-
       const answer = await createIceAnswer();
 
       if (answer) {
@@ -574,7 +572,7 @@ const RtcDisplay = () => {
     onIceAnswer
   );
 
-  setIceCandidateHandler((candidate: RTCIceCandidate | null) => {
+  setIceCandidateHandler(async (candidate: RTCIceCandidate | null) => {
     console.log("ice candidate handler peer: ", currentCall.peerUserId);
     if (candidate !== null) {
       signaling.iceCandidate(
@@ -602,7 +600,7 @@ const RtcDisplay = () => {
     }
   });
 
-  setTrackHandler((e: RTCTrackEvent) => {
+  setTrackHandler(async (e: RTCTrackEvent) => {
     console.log("setTrackHandler");
     const remoteVideo = document.querySelector("#remotevideo") as any;
     e.track.onunmute = () => {
@@ -618,7 +616,7 @@ const RtcDisplay = () => {
     };
   });
 
-  setConnectionStateHandler((state: RTCPeerConnectionState) => {
+  setConnectionStateHandler(async (state: RTCPeerConnectionState) => {
     console.log("setConnectionStateHandler", state);
     if (state === "connected") {
       console.log("connected: rtc connection is established");
@@ -628,7 +626,7 @@ const RtcDisplay = () => {
     }
   });
 
-  setIceConnectionStateHandler((state: RTCIceConnectionState) => {
+  setIceConnectionStateHandler(async (state: RTCIceConnectionState) => {
     console.log("setIceConnectionStateHandler", state);
     if (state === "disconnected") {
       console.log("disconnected: rtc ice connection is no longer stable");
@@ -643,6 +641,8 @@ const RtcDisplay = () => {
       );
 
       closeMedia();
+    } else if (state === "connected") {
+      await sendMedia();
     }
   });
 
