@@ -622,7 +622,7 @@ const RtcDisplay = () => {
       console.log("connected: rtc connection is established");
 
       // update local store with call connected status
-      dispatch(callConnected(currentCall.peerUserId, currentCall.startTime));
+      // dispatch(callConnected(currentCall.peerUserId, currentCall.startTime));
     }
   });
 
@@ -643,6 +643,8 @@ const RtcDisplay = () => {
       closeMedia();
     } else if (state === "connected") {
       await sendMedia();
+
+      dispatch(callConnected(currentCall.peerUserId, currentCall.startTime));
     }
   });
 
